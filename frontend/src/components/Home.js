@@ -8,25 +8,25 @@ function Home() {
     {
       title: 'Speech-to-Text Transcription',
       description: 'Advanced AI-powered transcription using OpenAI Whisper model. Convert sales calls into accurate text transcripts with timestamp tracking and language detection.',
-      image: 'https://via.placeholder.com/400x300/3b82f6/ffffff?text=Speech+Recognition',
+      image: '/images/feature-speech-to-text.png',
       highlights: ['Real-time processing', 'Multi-language support', 'High accuracy']
     },
     {
       title: 'NLP-Based Analysis',
       description: 'Comprehensive natural language processing to extract sentiment, intent, keywords, and entities from every conversation. Get deep insights automatically.',
-      image: 'https://via.placeholder.com/400x300/06b6d4/ffffff?text=NLP+Analysis',
+      image: '/images/feature-nlp-analysis.png',
       highlights: ['Sentiment detection', 'Intent classification', 'Entity extraction']
     },
     {
       title: 'Next-Best-Action Engine',
       description: 'Intelligent recommendation engine powered by AI and business rules. Get actionable insights with priority scoring, risk assessment, and opportunity detection.',
-      image: 'https://via.placeholder.com/400x300/10b981/ffffff?text=Action+Engine',
+      image: '/images/feature-action-engine.png',
       highlights: ['Smart recommendations', 'Risk scoring', 'Priority management']
     },
     {
       title: 'Review & Approval Dashboard',
       description: 'Comprehensive dashboard for reviewing call analytics, approving or rejecting recommended actions, and tracking key performance metrics in real-time.',
-      image: 'https://via.placeholder.com/400x300/f59e0b/ffffff?text=Dashboard',
+      image: '/images/feature-dashboard.png',
       highlights: ['Real-time metrics', 'Approval workflow', 'Analytics tracking']
     }
   ];
@@ -51,7 +51,7 @@ function Home() {
         </div>
         <div className="hero-image">
           <img 
-            src="https://via.placeholder.com/600x400/1e293b/ffffff?text=AI+Call+Intelligence" 
+            src="/images/hero-call-intelligence.png" 
             alt="Call Intelligence Platform"
           />
         </div>

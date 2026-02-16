@@ -48,6 +48,24 @@ export const storeCompanyContext = (policyText, metadata = null) => {
 
 export const getRagStats = () => api.get('/rag/stats');
 
+// Email & CRM Integration
+export const sendEmail = (callId, recipientEmail, emailType = 'action') => {
+  return api.post('/send-email', {
+    call_id: callId,
+    recipient_email: recipientEmail,
+    email_type: emailType,
+  });
+};
+
+export const syncToCRM = (callId, actions = ['create_lead', 'create_task', 'log_activity']) => {
+  return api.post('/crm/sync', {
+    call_id: callId,
+    actions,
+  });
+};
+
+export const getCRMStatus = (callId) => api.get(`/crm/status/${callId}`);
+
 // Individual Layer Endpoints (for debugging)
 export const transcribeAudio = (audioFile) => {
   const formData = new FormData();

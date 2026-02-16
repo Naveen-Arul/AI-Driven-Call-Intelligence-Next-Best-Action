@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getCalls } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,11 +9,7 @@ function CallsList() {
   const [statusFilter, setStatusFilter] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadCalls();
-  }, [statusFilter]);
-
-  const loadCalls = async () => {
+  const loadCalls = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -27,7 +23,11 @@ function CallsList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    loadCalls();
+  }, [loadCalls]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();

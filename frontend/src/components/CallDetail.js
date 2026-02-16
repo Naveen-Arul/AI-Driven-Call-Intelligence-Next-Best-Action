@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCallById, approveAction, rejectAction } from '../services/api';
 
@@ -11,11 +11,7 @@ function CallDetail() {
   const [actionLoading, setActionLoading] = useState(false);
   const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    loadCallDetails();
-  }, [callId]);
-
-  const loadCallDetails = async () => {
+  const loadCallDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -27,7 +23,11 @@ function CallDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [callId]);
+
+  useEffect(() => {
+    loadCallDetails();
+  }, [loadCallDetails]);
 
   const handleApprove = async () => {
     if (!window.confirm('Are you sure you want to approve this action?')) {

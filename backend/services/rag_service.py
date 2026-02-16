@@ -239,8 +239,13 @@ class RAGService:
             Formatted context string for LLM
         """
         # Build search query from transcript + key insights
-        intent = nlp_insights.get('intent', {}).get('primary_intent', '')
-        keywords = ', '.join(nlp_insights.get('keywords', {}).get('detected', [])[:5])
+        intent = nlp_insights.get('intent', '')
+        
+        # Extract keywords from all categories
+        all_keywords = []
+        for category_keywords in nlp_insights.get('keywords', {}).values():
+            all_keywords.extend(category_keywords)
+        keywords = ', '.join(all_keywords[:5])
         
         search_query = f"{transcript[:500]} Intent: {intent} Keywords: {keywords}"
         

@@ -32,13 +32,19 @@ class LLMService:
         
         logger.info(f"LLM Service initialized with model: {self.model}")
     
-    def generate_intelligence(self, transcript: str, nlp_analysis: Dict) -> Dict:
+    def generate_intelligence(
+        self, 
+        transcript: str, 
+        nlp_analysis: Dict,
+        company_context: Optional[str] = None
+    ) -> Dict:
         """
         Generate structured intelligence from transcript and NLP analysis.
         
         Args:
             transcript: Full call transcript text
             nlp_analysis: Dictionary containing sentiment, keywords, entities, and intent
+            company_context: Optional company policy context from RAG service
             
         Returns:
             {
@@ -59,7 +65,7 @@ class LLMService:
         entities = nlp_analysis.get("entities", [])
         
         # Build structured prompt
-        prompt = self._build_prompt(transcript, sentiment, intent, keywords, entities)
+        prompt = self._build_prompt(transcript, sentiment, intent, keywords, entities, company_context)
         
         try:
             logger.info(f"Generating intelligence for intent: {intent}")
@@ -133,7 +139,8 @@ class LLMService:
         sentiment: Dict,
         intent: str,
         keywords: Dict,
-        entities: list
+        entities: list,
+        company_context: Optional[str] = None
     ) -> str:
         """
         Build structured prompt for LLM.
@@ -144,6 +151,7 @@ class LLMService:
             intent: Detected intent
             keywords: Detected keywords by category
             entities: Extracted entities
+            company_context: Optional company policy context
             
         Returns:
             Formatted prompt string
@@ -152,8 +160,13 @@ class LLMService:
         sentiment_label = sentiment.get("sentiment_label", "neutral")
         sentiment_score = sentiment.get("compound", 0.0)
         
+        # Add company context section if available
+        context_section = ""
+        if company_context:
+            context_section = f"\n\n{company_context}\n"
+        
         prompt = f"""Analyze this sales/support call and return structured intelligence.
-
+{context_section}
 **CALL TRANSCRIPT:**
 {transcript}
 

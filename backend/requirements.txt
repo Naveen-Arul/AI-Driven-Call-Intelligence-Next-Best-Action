@@ -19,6 +19,13 @@ vaderSentiment==3.3.2
 # LLM Intelligence
 groq==0.13.0
 
+# Database & Persistence
+pymongo==4.6.1
+
+# RAG / Vector Database
+chromadb==0.4.22
+sentence-transformers==2.3.1
+
 # Utilities
 pydantic==2.10.6
 numpy<2.0

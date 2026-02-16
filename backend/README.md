@@ -2,20 +2,30 @@
 
 FastAPI backend for transcription and call intelligence.
 
-## 🚀 Step 1: Transcription Service
+## 🚀 Platform Overview
 
-Clean, modular Speech-to-Text using OpenAI Whisper.
+Production-grade AI Call Intelligence Platform with 4-layer architecture:
+
+- **Step 1**: Transcription Service (OpenAI Whisper STT)
+- **Step 2**: NLP Analysis Layer (Sentiment + Intent + Entities)
+- **Step 3**: LLM Intelligence (Groq Llama 3.1 contextual reasoning)
+- **Step 4**: Business Rules Engine (Governance + validation layer)
 
 ## 📁 Structure
 
 ```
 backend/
-├── app.py                          # FastAPI application
+├── app.py                          # FastAPI application (v4.0.0)
 ├── services/
-│   └── transcription_service.py    # Whisper STT service
+│   ├── transcription_service.py    # Layer 1: Whisper STT
+│   ├── nlp_service.py             # Layer 2: NLP Analysis
+│   ├── llm_service.py             # Layer 3: LLM Intelligence
+│   ├── action_engine.py           # Layer 4: Business Rules
+│   └── __init__.py                # Service exports
 ├── uploads/                        # Audio file storage
 ├── requirements.txt                # Python dependencies
 ├── .env                           # API keys (not in git)
+├── test_*.py                      # Test suites
 └── README.md
 ```
 
@@ -51,29 +61,32 @@ Server runs on: `http://localhost:8000`
 ## 📡 API Endpoints
 
 ### Health Check
-```
-GET /
-GET /health
-```
-
-### Transcribe Audio
+```1️⃣ Transcribe Audio
 ```
 POST /transcribe
 Content-Type: multipart/form-data
-
-Body:
-  file: <audio_file.wav>
+Body: file: <audio_file.wav>
 ```
 
-**Response:**
-```json
-{
-  "transcript": "Full transcript text",
-  "segments": [
-    {
-      "start_time": 0.0,
-      "end_time": 3.4,
-      "text": "Individual segment text"
+### 2️⃣ Analyze Transcript
+```
+POST /analyze
+Content-Type: application/json
+Body: { "transcript": "..." }
+```
+
+### 3️⃣ LLM Intelligence
+```
+POST /intelligence
+Content-Type: application/json
+Body: { "transcript": "...", "nlp_insights": {...} }
+```
+
+### 4️⃣ Final Decision (Business Rules)
+```
+POST /decision
+Content-Type: application/json
+Body: { "nlp_insights": {...}, "llm_output": {...}       "text": "Individual segment text"
     }
   ],
   "processing_time": 4.12,
@@ -108,13 +121,30 @@ print(response.json())
 3. Key: `file` (type: File)
 4. Select audio file
 5. Send
-
-## 🎯 Features
-
-- ✅ FastAPI (production-ready async framework)
-- ✅ OpenAI Whisper transcription
+### Layer 1: Transcription
+- ✅ OpenAI Whisper (base model)
 - ✅ Timestamped segments
-- ✅ Clean service architecture
+- ✅ Multi-format support (WAV, MP3, M4A, FLAC, OGG)
+
+### Layer 2: NLP Analysis
+- ✅ VADER sentiment analysis
+- ✅ 10 keyword categories (demo, pricing, complaint, churn, etc.)
+- ✅ Entity extraction (Money, Dates)
+- ✅ Intent classification (9 intent types)
+
+### Layer 3: LLM Intelligence
+- ✅ Groq Llama 3.1-8b-instant
+- ✅ Structured JSON output
+- ✅ Priority scoring (0-100)
+- ✅ Risk/opportunity detection
+- ✅ Action recommendations
+
+### Layer 4: Business Rules
+- ✅ 6 production governance rules
+- ✅ Confidence scoring (sentiment + keywords + entities)
+- ✅ Escalation logic
+- ✅ Revenue opportunity detection
+- ✅ Churn risk mitigation
 - ✅ Error handling
 - ✅ CORS enabled
 - ✅ Environment variable management
@@ -124,13 +154,14 @@ print(response.json())
 - WAV
 - MP3
 - M4A
-- FLAC
-- OGG
+- FLACPlatform Status
 
-## 🔄 Next Steps
-
-- [ ] Step 2: NLP Analysis Layer (sentiment, intent, entities)
-- [ ] Step 3: LLM Intelligence (Groq + structured outputs)
+- ✅ Step 1: Transcription Service (Whisper STT)
+- ✅ Step 2: NLP Analysis Layer (VADER + keyword detection + entity extraction)
+- ✅ Step 3: LLM Intelligence (Groq Llama 3.1-8b-instant)
+- ✅ Step 4: Business Rules Engine (6 production rules + confidence scoring)
+- ⬜ Step 5: CRM Integration Layer
+- ⬜ Step 6: Analytics & KPI Dashboardence (Groq + structured outputs)
 - [ ] Step 4: Next-Best-Action Engine
 - [ ] Step 5: CRM Integration
 - [ ] Step 6: Dashboard UI

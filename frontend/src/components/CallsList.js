@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getCalls } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import LoadingScreen from './LoadingScreen';
 
 function CallsList() {
   const [calls, setCalls] = useState([]);
@@ -116,7 +117,7 @@ function CallsList() {
         </div>
 
         {loading ? (
-          <div className="loading-spinner"></div>
+          <LoadingScreen message="Loading calls..." />
         ) : calls.length === 0 ? (
           <div className="empty-state">
               <svg className="empty-state-icon" viewBox="0 0 20 20" fill="currentColor">

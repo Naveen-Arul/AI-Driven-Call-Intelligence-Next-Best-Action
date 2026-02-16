@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 120000, // 2 minutes timeout for long operations like audio processing
 });
 
 // Health & Service Info
@@ -21,6 +22,7 @@ export const processCall = (audioFile) => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 180000, // 3 minutes for audio processing
   });
 };
 
@@ -48,7 +50,7 @@ export const storeCompanyContext = (policyText, metadata = null) => {
 
 export const getRagStats = () => api.get('/rag/stats');
 
-// Email & CRM Integration
+// Email Integration (Optional)
 export const sendEmail = (callId, recipientEmail, emailType = 'action') => {
   return api.post('/send-email', {
     call_id: callId,
@@ -56,15 +58,6 @@ export const sendEmail = (callId, recipientEmail, emailType = 'action') => {
     email_type: emailType,
   });
 };
-
-export const syncToCRM = (callId, actions = ['create_lead', 'create_task', 'log_activity']) => {
-  return api.post('/crm/sync', {
-    call_id: callId,
-    actions,
-  });
-};
-
-export const getCRMStatus = (callId) => api.get(`/crm/status/${callId}`);
 
 // Individual Layer Endpoints (for debugging)
 export const transcribeAudio = (audioFile) => {

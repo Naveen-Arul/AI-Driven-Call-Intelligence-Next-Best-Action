@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardMetrics } from '../services/api';
+import LoadingScreen from './LoadingScreen';
 
 function Dashboard() {
   const [metrics, setMetrics] = useState(null);
@@ -30,7 +31,7 @@ function Dashboard() {
 
   if (loading && !metrics) {
     return (
-      <div className="loading-spinner"></div>
+      <LoadingScreen message="Loading dashboard metrics..." />
     );
   }
 

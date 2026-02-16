@@ -248,6 +248,11 @@ function ProcessCall() {
         <p className="page-subtitle">Upload an audio file for complete AI analysis</p>
       </div>
 
+      <div className="alert alert-info" style={{marginBottom: '1.5rem'}}>
+        <strong>💡 Processing Time:</strong> Large audio files may take 30-60 seconds to process. 
+        The system performs speech-to-text, NLP analysis, LLM intelligence, and business rules evaluation.
+      </div>
+
       {error && (
         <div className="alert alert-error">
           <strong>Error:</strong> {error}
@@ -344,37 +349,53 @@ function ProcessCall() {
             background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
             border: '2px solid #0284c7',
             borderRadius: '12px',
-            padding: '1.5rem',
-            animation: 'pulse 2s ease-in-out infinite'
+            padding: '2rem',
+            boxShadow: '0 8px 24px rgba(2, 132, 199, 0.15)'
           }}>
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              textAlign: 'center',
               marginBottom: '1.5rem'
             }}>
               <h3 style={{
                 fontSize: '1.25rem',
                 fontWeight: '700',
-                color: '#0c4a6e',
-                margin: 0
+                color: '#0f172a',
+                marginBottom: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
               }}>
-                <span className="loading-spinner" style={{
-                  width: '24px',
-                  height: '24px',
-                  marginRight: '12px',
-                  borderWidth: '3px',
-                  display: 'inline-block',
-                  verticalAlign: 'middle'
-                }}></span>
-                Processing Your Call...
+                {processingSteps[currentStep]?.icon}
+                {processingSteps[currentStep]?.name}
               </h3>
+              <p style={{
+                color: '#64748b',
+                fontSize: '0.875rem'
+              }}>
+                {processingSteps[currentStep]?.description}
+              </p>
+            </div>
+
+            {/* Progress Info */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1rem'
+            }}>
               <span style={{
-                fontSize: '1rem',
+                fontSize: '0.875rem',
                 fontWeight: '600',
                 color: '#0284c7'
               }}>
                 Step {currentStep + 1} of {processingSteps.length}
+              </span>
+              <span style={{
+                fontSize: '0.875rem',
+                color: '#64748b'
+              }}>
+                Processing...
               </span>
             </div>
 

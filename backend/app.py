@@ -26,7 +26,6 @@ from services.action_engine import ActionEngine
 from services.database_service import DatabaseService
 from services.rag_service import RAGService
 from services.email_service import EmailService
-from services.crm_service import CRMService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,13 +43,12 @@ action_engine = None
 db_service = None
 rag_service = None
 email_service = None
-crm_service = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
-    global transcription_service, nlp_service, llm_service, action_engine, db_service, rag_service, email_service, crm_service
+    global transcription_service, nlp_service, llm_service, action_engine, db_service, rag_service, email_service
     logger.info("Starting Call Intelligence API v5.0...")
     
     # Initialize all services
@@ -67,9 +65,8 @@ async def lifespan(app: FastAPI):
     rag_service = RAGService()
     rag_service.initialize()
     
-    # Initialize email and CRM services
+    # Initialize email service
     email_service = EmailService()
-    crm_service = CRMService()
     
     logger.info("✅ All services initialized successfully")
     yield
@@ -204,12 +201,6 @@ class SendEmailRequest(BaseModel):
     call_id: str
     recipient_email: str
     email_type: str = "action"  # "action" or "reminder"
-
-
-class CRMSyncRequest(BaseModel):
-    call_id: str
-    actions: List[str] = ["create_lead", "create_task", "log_activity"]  # CRM actions to perform
-    skip: int
 
 
 class MetricsResponse(BaseModel):
@@ -862,94 +853,6 @@ async def send_email(request: SendEmailRequest):
         raise
     except Exception as e:
         logger.error(f"Failed to send email: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/crm/sync")
-async def sync_to_crm(request: CRMSyncRequest):
-    """
-    🔄 Sync call data to CRM system.
-    
-    Args:
-        request: Call ID and list of CRM actions to perform
-        
-    Returns:
-        CRM sync results with action details
-    """
-    try:
-        logger.info(f"🔄 Syncing call {request.call_id} to CRM...")
-        
-        # Get call data from database
-        call_data = db_service.get_call_by_id(request.call_id)
-        
-        if not call_data:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Call {request.call_id} not found"
-            )
-        
-        # Perform CRM sync
-        result = crm_service.sync_to_crm(call_data, request.actions)
-        
-        # Log CRM sync in database
-        db_service.calls_collection.update_one(
-            {"_id": call_data["_id"]},
-            {
-                "$set": {
-                    "crm_synced": True,
-                    "crm_sync_timestamp": result.get("timestamp"),
-                    "crm_actions": result.get("actions_performed")
-                }
-            }
-        )
-        
-        logger.info(f"✅ CRM sync completed for call {request.call_id}")
-        
-        return JSONResponse(content={
-            "success": True,
-            "call_id": request.call_id,
-            "crm_results": result
-        })
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to sync to CRM: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/crm/status/{call_id}")
-async def get_crm_status(call_id: str):
-    """
-    📊 Get CRM sync status for a call.
-    
-    Args:
-        call_id: Call identifier
-        
-    Returns:
-        CRM sync status and action history
-    """
-    try:
-        call_data = db_service.get_call_by_id(call_id)
-        
-        if not call_data:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Call {call_id} not found"
-            )
-        
-        return JSONResponse(content={
-            "call_id": call_id,
-            "crm_synced": call_data.get("crm_synced", False),
-            "crm_sync_timestamp": call_data.get("crm_sync_timestamp"),
-            "crm_actions": call_data.get("crm_actions", []),
-            "emails_sent": call_data.get("emails_sent", [])
-        })
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get CRM status: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

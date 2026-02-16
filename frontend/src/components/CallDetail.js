@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCallById, approveAction, rejectAction, sendEmail, syncToCRM, getCRMStatus } from '../services/api';
+import { getCallById, approveAction, rejectAction, sendEmail } from '../services/api';
+import LoadingScreen from './LoadingScreen';
 
 function CallDetail() {
   const { callId } = useParams();
@@ -12,8 +13,6 @@ function CallDetail() {
   const [notes, setNotes] = useState('');
   const [emailRecipient, setEmailRecipient] = useState('naveenarul111@gmail.com');
   const [emailLoading, setEmailLoading] = useState(false);
-  const [crmLoading, setCrmLoading] = useState(false);
-  const [crmStatus, setCrmStatus] = useState(null);
 
   const loadCallDetails = useCallback(async () => {
     try {
@@ -85,41 +84,10 @@ function CallDetail() {
     }
   };
 
-  const handleCRMSync = async () => {
-    if (!window.confirm('Sync this call to CRM? This will create a lead, task, and log the activity.')) {
-      return;
-    }
 
-    setCrmLoading(true);
-    try {
-      const response = await syncToCRM(callId);
-      alert('Successfully synced to CRM!');
-      await loadCRMStatus();
-      await loadCallDetails();
-    } catch (err) {
-      alert('Failed to sync to CRM: ' + (err.response?.data?.detail || err.message));
-    } finally {
-      setCrmLoading(false);
-    }
-  };
-
-  const loadCRMStatus = async () => {
-    try {
-      const response = await getCRMStatus(callId);
-      setCrmStatus(response.data);
-    } catch (err) {
-      console.error('Failed to load CRM status:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (call) {
-      loadCRMStatus();
-    }
-  }, [call]);
 
   if (loading) {
-    return <div className="loading-spinner"></div>;
+    return <LoadingScreen message="Loading call details..." />;
   }
 
   if (error || !call) {
@@ -223,21 +191,21 @@ function CallDetail() {
         )}
       </div>
 
-      {/* Email & CRM Integration */}
+      {/* Email Integration */}
       <div className="card mt-3">
         <h2 className="card-header">
           <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
             <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
           </svg>
-          Email & CRM Integration
+          Email Notifications (Optional)
         </h2>
         
         {/* Email Section */}
         <div className="mb-4">
-          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1f2937' }}>
-            📧 Send Email Notification
-          </h3>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+            Send email notifications about this call when needed. This is optional.
+          </p>
           <div className="form-group">
             <label className="form-label">Recipient Email</label>
             <input
@@ -276,55 +244,6 @@ function CallDetail() {
               <p style={{ fontSize: '0.875rem', color: '#10b981', fontWeight: '500' }}>
                 ✅ {call.emails_sent.length} email(s) sent
               </p>
-            </div>
-          )}
-        </div>
-
-        {/* CRM Section */}
-        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1f2937' }}>
-            🔄 CRM Integration
-          </h3>
-          
-          {crmStatus && crmStatus.crm_synced ? (
-            <div>
-              <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
-                <strong>✅ Synced to CRM</strong>
-                <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                  Synced at: {new Date(crmStatus.crm_sync_timestamp).toLocaleString()}
-                </p>
-              </div>
-              {crmStatus.crm_actions && crmStatus.crm_actions.length > 0 && (
-                <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#4b5563' }}>
-                    CRM Actions Performed:
-                  </h4>
-                  {crmStatus.crm_actions.map((action, idx) => (
-                    <div key={idx} style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                      <span className="badge badge-info" style={{ marginRight: '0.5rem' }}>
-                        {action.crm_action}
-                      </span>
-                      <span style={{ color: '#6b7280' }}>{action.message}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
-                Sync this call to your CRM system. This will create a lead, task, and log the activity.
-              </p>
-              <button
-                className="btn btn-primary"
-                onClick={handleCRMSync}
-                disabled={crmLoading}
-              >
-                <svg style={{ width: '16px', height: '16px', marginRight: '6px', display: 'inline' }} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                </svg>
-                {crmLoading ? 'Syncing...' : 'Sync to CRM (Salesforce)'}
-              </button>
             </div>
           )}
         </div>

@@ -425,10 +425,7 @@ PUT  /calls/{id}/reject          → Reject pending action
 GET  /dashboard/metrics          → Dashboard statistics
 POST /company_context            → Upload RAG context
 GET  /rag/stats                  → RAG system status
-POST /send-email                 → Send email notification (action/reminder)
-POST /crm/sync                   → Sync call to CRM (Salesforce)
-GET  /crm/status/{id}            → Get CRM sync status
-```
+POST /send-email                 → Send optional email notification
 
 ### Frontend API Service (`services/api.js`)
 
@@ -443,8 +440,6 @@ getDashboardMetrics()           → GET /dashboard/metrics
 uploadCompanyContext(text)      → POST /company_context
 getRagStats()                   → GET /rag/stats
 sendEmail(callId, email, type)  → POST /send-email
-syncToCRM(callId, actions)      → POST /crm/sync
-getCRMStatus(callId)            → GET /crm/status/:id
 ```
 
 ---
@@ -461,9 +456,8 @@ getCRMStatus(callId)            → GET /crm/status/:id
 6. **API Integration**: FastAPI backend fully connected
 7. **Dashboard UI**: React frontend with 6 pages
 8. **File Upload**: Audio processing with drag-drop
-9. **Email Automation**: Real-time Gmail SMTP with HTML templates
-10. **CRM Integration**: Salesforce sync (lead/task/activity)
-11. **Reminder System**: Automated follow-up emails
+9. **Email Automation**: Optional email notifications with HTML templates
+10. **Documentation**: Comprehensive setup and usage guides
 
 ### ⚠️ DISABLED (Implementation Complete)
 
@@ -481,7 +475,7 @@ getCRMStatus(callId)            → GET /crm/status/:id
 | NLP Analysis | ✅ COMPLETE | VADER + spaCy + keywords |
 | Action Engine | ✅ COMPLETE | 6 business rules + LLM |
 | Dashboard UI | ✅ COMPLETE | React 6-page app |
-| CRM/Telephony Integration | ✅ COMPLETE | Salesforce + Email automation |
+| Email Integration | ✅ COMPLETE | Optional email notifications |
 
 **Score: 5/5 Requirements Met**
 
@@ -508,27 +502,7 @@ getCRMStatus(callId)            → GET /crm/status/:id
    - Gmail SMTP (Port 587, TLS)
    - Requires App Password (2FA)
    - See `EMAIL_SETUP_GUIDE.md` for setup
-
-### 🔄 CRM Features
-
-1. **Salesforce Integration** (Mock Implementation)
-   - **Create Lead**: Customer info + call summary
-   - **Create Task**: Assigned action with due date
-   - **Log Activity**: Call recording with outcome
-   - **Update Opportunity**: Sales stage progression
-
-2. **CRM Sync Data**
-   - Lead ID generation
-   - Priority-based task scheduling
-   - Sentiment scoring
-   - Risk/opportunity levels
-   - Activity history tracking
-
-3. **CRM Status Tracking**
-   - Sync timestamp
-   - Actions performed
-   - Email delivery status
-   - Retrieved via `/crm/status/{id}` endpoint
+   - Email notifications are optional and can be sent when needed
 
 ---
 
@@ -666,9 +640,9 @@ python test_complete_backend.py
 
 ### What Makes This Unique
 
-1. **Complete 10-Step Automation Pipeline**
+1. **Complete 8-Step Automation Pipeline**
    - Most solutions stop at transcription + basic NLP
-   - We go further: STT → NLP → RAG → LLM → Rules → DB → UI → Email → CRM
+   - We go further: STT → NLP → RAG → LLM → Rules → DB → UI → Email
    - Full end-to-end automation from audio to action execution
 
 2. **Real Email Automation** (Not Mock)

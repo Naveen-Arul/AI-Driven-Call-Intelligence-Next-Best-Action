@@ -1,0 +1,24 @@
+# FastAPI Backend Dependencies
+# Core Framework
+fastapi==0.115.6
+uvicorn[standard]==0.27.0
+python-multipart==0.0.18
+
+# Environment Management
+python-dotenv==1.0.0
+
+# Speech-to-Text
+openai-whisper==20231117
+torch>=2.2.0
+torchaudio>=2.2.0
+
+# NLP Analysis
+vaderSentiment==3.3.2
+# spacy==3.7.2  # Optional - commented out due to PyTorch dependency conflicts
+
+# LLM Intelligence
+groq==0.13.0
+
+# Utilities
+pydantic==2.10.6
+numpy<2.0

@@ -46,6 +46,33 @@ class DatabaseService:
             self.client.close()
             print("MongoDB connection closed")
     
+    def _serialize_call(self, call: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Serialize MongoDB document for JSON response.
+        Converts ObjectId and datetime to strings.
+        
+        Args:
+            call: MongoDB document
+        
+        Returns:
+            JSON-serializable dictionary
+        """
+        if not call:
+            return None
+        
+        # Convert ObjectId to string
+        if "_id" in call:
+            call["_id"] = str(call["_id"])
+        
+        # Convert datetime objects to ISO format strings
+        if "created_at" in call and isinstance(call["created_at"], datetime):
+            call["created_at"] = call["created_at"].isoformat()
+        
+        if "updated_at" in call and isinstance(call["updated_at"], datetime):
+            call["updated_at"] = call["updated_at"].isoformat()
+        
+        return call
+    
     def store_call(
         self,
         transcript: str,
@@ -93,10 +120,7 @@ class DatabaseService:
         """
         try:
             call = self.calls_collection.find_one({"_id": ObjectId(call_id)})
-            if call:
-                call["_id"] = str(call["_id"])
-                return call
-            return None
+            return self._serialize_call(call)
         except Exception as e:
             print(f"Error retrieving call {call_id}: {e}")
             return None
@@ -130,11 +154,8 @@ class DatabaseService:
             .limit(limit)
         )
         
-        # Convert ObjectId to string
-        for call in calls:
-            call["_id"] = str(call["_id"])
-        
-        return calls
+        # Serialize calls (convert ObjectIds and datetimes to strings)
+        return [self._serialize_call(call) for call in calls]
     
     def update_call_status(
         self,

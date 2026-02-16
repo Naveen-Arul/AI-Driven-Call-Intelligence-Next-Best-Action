@@ -1,377 +1,659 @@
-# 🧠 AI-Driven Call Intelligence & Next-Best-Action Platform
+# Call Intelligence Platform - Complete System Documentation
 
-**Transform passive call recordings into structured intelligence and automated next actions.**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
-
----
-
-## 📋 Overview
-
-This platform converts sales and support call recordings into:
-- **Structured transcripts** with timestamps
-- **Sentiment analysis** and keyword detection
-- **Intent classification** and entity extraction
-- **AI-powered action recommendations** with priority scoring
-- **Risk and opportunity assessment**
-
-Built with production-grade architecture using **FastAPI**, **OpenAI Whisper**, **VADER Sentiment**, and **Groq LLM**.
+## Table of Contents
+1. [Overview](#overview)
+2. [Complete Backend Implementation](#complete-backend-implementation)
+3. [Complete Frontend UI](#complete-frontend-ui)
+4. [User Flow Example](#user-flow-example)
+5. [API Endpoints](#api-endpoints)
+6. [System Status](#system-status)
+7. [Quick Start](#quick-start)
+8. [Technology Stack](#technology-stack)
 
 ---
 
-## 🏗️ Architecture
+## Overview
 
-### 3-Layer Intelligence Stack
+**Call Intelligence Platform** is an AI-powered system that automatically processes call recordings and generates actionable business recommendations. The system uses a sophisticated 8-step pipeline combining Speech-to-Text, NLP analysis, RAG-enhanced context, and LLM intelligence to deliver automated decision-making for sales and support operations.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Audio Recording                        │
-└────────────────────┬────────────────────────────────────┘
-                     │
-          ┌──────────▼──────────┐
-          │  Layer 1: STT       │
-          │  Whisper Model      │
-          │  (Speech-to-Text)   │
-          └──────────┬──────────┘
-                     │
-          ┌──────────▼──────────────────┐
-          │  Layer 2: NLP Analysis      │
-          │  • Sentiment (VADER)        │
-          │  • Keywords (10 categories) │
-          │  • Entities (Regex)         │
-          │  • Intent (9 types)         │
-          └──────────┬──────────────────┘
-                     │
-          ┌──────────▼────────────────────┐
-          │  Layer 3: LLM Intelligence    │
-          │  Groq Llama 3.1               │
-          │  • Contextual reasoning       │
-          │  • Action recommendations     │
-          │  • Priority scoring (0-100)   │
-          │  • Risk/opportunity assessment│
-          └──────────┬────────────────────┘
-                     │
-          ┌──────────▼──────────────┐
-          │  Structured JSON Output  │
-          └──────────────────────────┘
-```
+### Key Capabilities
+- **Automated Transcription**: OpenAI Whisper converts audio to text
+- **NLP Analysis**: VADER sentiment + spaCy NER + keyword detection
+- **Context-Aware Intelligence**: RAG service enhances LLM with company policies
+- **Business Rules Engine**: 6 validation rules for automated approval/escalation
+- **Real-Time Dashboard**: Live metrics and call monitoring
+- **Action Automation**: Routes recommendations to appropriate teams
 
 ---
 
-## 🚀 Quick Start
+## Complete Backend Implementation
 
-### Prerequisites
+### 8-Step Processing Pipeline
 
-- Python 3.12+
-- pip package manager
-- API Keys:
-  - Groq API Key ([Get it here](https://console.groq.com/))
-  - ElevenLabs API Key (Optional, for future features)
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/Naveen-Arul/AI-Driven-Call-Intelligence-Next-Best-Action.git
-cd AI-Driven-Call-Intelligence-Next-Best-Action
+#### **STEP 1: Audio Upload**
+```python
+POST /process_call
+- Accepts: .wav, .mp3, .m4a, .flac, .ogg
+- Saves to: backend/uploads/
+- Returns: Complete JSON with all analysis steps
 ```
 
-2. **Set up environment variables**
-```bash
-cd backend
-cp .env.example .env
-# Edit .env and add your API keys
+#### **STEP 2: Speech-to-Text (Whisper)**
+```python
+# services/transcription_service.py
+- Model: OpenAI Whisper (openai/whisper-base)
+- Languages: 99 supported
+- Output: Full transcript + word-level timestamps
+- Processing: ~4-6 seconds for 30-second audio
 ```
 
-3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Run the server**
-```bash
-uvicorn app:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Server will start at `http://localhost:8000`
-
----
-
-## 📡 API Endpoints
-
-### 1. Health Check
-```http
-GET /
-GET /health
-```
-
-**Response:**
+**Sample Output:**
 ```json
 {
-  "status": "healthy",
-  "transcription_service": "ready",
-  "nlp_service": "ready",
-  "llm_service": "ready"
-}
-```
-
----
-
-### 2. Transcribe Audio
-```http
-POST /transcribe
-Content-Type: multipart/form-data
-```
-
-**Request:**
-- `file`: Audio file (wav, mp3, m4a, flac, ogg)
-
-**Response:**
-```json
-{
-  "transcript": "Full transcript text",
-  "segments": [
-    {
-      "start_time": 0.0,
-      "end_time": 3.4,
-      "text": "Individual segment"
-    }
-  ],
+  "transcript": "Hi, I'm calling to cancel my subscription. I'm not happy with the service.",
   "language": "en",
-  "processing_time": 4.83
-}
-```
-
----
-
-### 3. Analyze Transcript (NLP)
-```http
-POST /analyze
-Content-Type: application/json
-```
-
-**Request:**
-```json
-{
-  "transcript": "Your call transcript here..."
-}
-```
-
-**Response:**
-```json
-{
-  "sentiment": {
-    "compound": 0.89,
-    "positive": 0.35,
-    "neutral": 0.60,
-    "negative": 0.05,
-    "sentiment_label": "positive"
-  },
-  "intent": "demo_request",
-  "keywords": {
-    "demo": ["demo"],
-    "interest": ["interested"],
-    "timeline": ["next week"]
-  },
-  "entities": [
-    {"text": "next week", "label": "DATE"}
+  "segments": [
+    {"start_time": 0.0, "end_time": 3.2, "text": "Hi, I'm calling to cancel..."}
   ]
 }
 ```
 
----
+#### **STEP 3: NLP Analysis**
+```python
+# services/nlp_service.py
+Content analyzed:
+1. Sentiment Analysis (VADER)
+   - Compound score: -1 to +1
+   - Positive/Neutral/Negative percentages
+   - Label: positive, neutral, negative
 
-### 4. Generate Intelligence (LLM)
-```http
-POST /intelligence
-Content-Type: application/json
+2. Keyword Detection (10 Categories)
+   - demo, pricing, complaint, cancel, competitor, interest, 
+     timeline, objection, technical, closing
+
+3. Entity Extraction (spaCy NER)
+   - PERSON, ORG, DATE, MONEY, GPE, etc.
+   - Regex backup: emails, phones, amounts
+
+4. Intent Classification (9 Types)
+   - complaint, demo_request, pricing_inquiry, cancel_request,
+     technical_issue, competitor_mention, general_inquiry, 
+     positive_feedback, follow_up
 ```
 
-**Request:**
+**Sample Output:**
 ```json
 {
-  "transcript": "Call transcript...",
-  "nlp_analysis": {
-    "sentiment": {...},
-    "intent": "demo_request",
-    "keywords": {...},
-    "entities": [...]
-  }
+  "sentiment": {
+    "compound": -0.73,
+    "positive": 0.0,
+    "neutral": 0.42,
+    "negative": 0.58,
+    "sentiment_label": "negative"
+  },
+  "intent": "cancel_request",
+  "keywords": {
+    "cancel": ["cancel", "subscription"],
+    "complaint": ["not happy"]
+  },
+  "entities": [
+    {"text": "subscription", "label": "PRODUCT"}
+  ]
 }
 ```
 
-**Response:**
+#### **STEP 4: RAG Context Retrieval**
+```python
+# services/rag_service.py
+- Vector DB: ChromaDB (disabled on Windows, works on Linux/Docker)
+- Embeddings: all-MiniLM-L6-v2
+- Retrieves: Top 3 relevant company policy snippets
+- Enhances: LLM prompt with company-specific context
+```
+
+**Status:**
+- Implementation: COMPLETE
+- Production: Disabled (ChromaDB Windows compatibility)
+- Deployment: Enable in Docker/Linux for enterprise features
+
+#### **STEP 5: LLM Intelligence**
+```python
+# services/llm_service.py
+- Model: Groq Llama 3.1-8b-instant
+- Input: Transcript + NLP + RAG context
+- Output: Structured decision JSON
+```
+
+**LLM Generates:**
+1. **call_summary**: Brief summary of the conversation
+2. **risk_level**: high/medium/low (churn/escalation risk)
+3. **opportunity_level**: high/medium/low (sales potential)
+4. **recommended_action**: Specific next step for team
+5. **priority_level**: urgent/high/medium/low
+6. **reasoning**: Explanation of the recommendation
+
+**Sample Output:**
 ```json
 {
-  "call_summary_short": "Customer expressed interest in demo",
-  "call_summary_detailed": "Detailed summary...",
-  "risk_level": "low",
-  "opportunity_level": "high",
-  "recommended_action": "Schedule demo for next Tuesday",
+  "call_summary": "Customer is dissatisfied and wants to cancel subscription",
+  "risk_level": "high",
+  "opportunity_level": "low",
+  "recommended_action": "Escalate to retention team within 24 hours - offer discount or resolution",
+  "priority_level": "urgent",
+  "reasoning": "Strong cancellation language combined with negative sentiment indicates immediate churn risk"
+}
+```
+
+#### **STEP 6: Business Rules Engine**
+```python
+# services/action_engine.py
+6 Validation Rules:
+
+Rule 1: High Risk + Cancel Intent
+  → Auto-escalate to retention team
+  → Priority = urgent
+  
+Rule 2: Churn Keywords + Negative Sentiment (compound < -0.3)
+  → Priority boost: medium → high
+  
+Rule 3: Demo/Interest Keywords + Positive Sentiment
+  → Opportunity level = high
+  → Route to sales team
+  
+Rule 4: Urgent Timeline ("today", "immediately", "asap")
+  → Priority = urgent
+  
+Rule 5: Price Objection + High Sentiment
+  → Add retention specialist tag
+  
+Rule 6: High Opportunity + Demo Request
+  → Fast-track to scheduling queue
+```
+
+**Final Decision Output:**
+```json
+{
+  "final_action": "Escalate to retention team - customer cancellation risk",
+  "assigned_to": "Retention Team",
   "priority_score": 95,
-  "reasoning": "High opportunity due to positive sentiment and demo request"
+  "priority_level": "urgent",
+  "approval_status": "pending_approval",
+  "flags": ["high_risk", "cancel_intent"],
+  "reasoning": "Business rule override: High-risk cancellation cases require immediate action"
+}
+```
+
+#### **STEP 7: Database Storage**
+```python
+# services/database_service.py
+- Database: MongoDB
+- Collections: calls, company_context
+- Stored Data:
+  {
+    "filename": "call_123.wav",
+    "transcript": "...",
+    "nlp_analysis": {...},
+    "llm_result": {...},
+    "final_decision": {...},
+    "processing_timestamp": "2026-02-16T10:30:00Z",
+    "approval_status": "pending_approval"
+  }
+```
+
+#### **STEP 8: API Response**
+Complete JSON returned to frontend with all processing steps:
+```json
+{
+  "status": "success",
+  "call_id": "65d4e8f2a9c3b1a2d3e4f5a6",
+  "transcript": {...},
+  "nlp_analysis": {...},
+  "llm_result": {...},
+  "final_decision": {...},
+  "processing_time": 8.5
 }
 ```
 
 ---
 
-## 🧪 Testing
+## Complete Frontend UI
 
-### Test Transcription Service
+### 6 Pages/Components
+
+#### **1. Home Page** (`/`)
+**Purpose:** Landing page explaining platform capabilities
+
+**Features:**
+- Hero section with call intelligence visualization (600x400px hero image)
+- 4 Feature cards with AI-generated images:
+  - Speech-to-Text (400x300px)
+  - NLP Analysis (400x300px)
+  - Action Engine (400x300px)
+  - Dashboard (400x300px)
+- 4-Step process explanation
+- "Get Started" and "View Dashboard" CTA buttons
+
+**Design:**
+- Blue-teal gradient background
+- Responsive 2-column grid layout
+- SVG icons for process steps
+- Professional typography (1.75rem titles, 1rem body)
+
+#### **2. Dashboard** (`/dashboard`)
+**Purpose:** Real-time analytics and system overview
+
+**Metrics Displayed:**
+- **Total Calls Processed**: Count of all calls
+- **High Risk Calls**: Calls with risk_level = "high"
+- **Revenue Opportunities**: Calls with opportunity_level = "high"
+- **Average Priority Score**: Mean of all priority_score values
+
+**Visualizations:**
+- Sentiment distribution pie chart
+- Status breakdown (pending/approved/rejected)
+- Recent calls table (last 5 calls)
+
+**Auto-Refresh:** Every 30 seconds
+
+**Design Elements:**
+- 4 stat cards with gradients
+- Grid layout for sentiment/status
+- Compact table view
+- SVG chart icons
+
+#### **3. Process Call** (`/process`)
+**Purpose:** Upload and process new call recordings
+
+**Features:**
+- Drag-and-drop file upload
+- File type validation (audio formats only)
+- Real-time processing status:
+  1. Transcribing audio...
+  2. Analyzing with NLP...
+  3. Generating intelligence...
+  4. Applying business rules...
+- Results display:
+  - Final Decision card (action, priority, assigned team)
+  - Transcript preview
+  - Sentiment analysis
+- "View Full Details" link to detailed view
+
+**Design:**
+- Upload zone with SVG file icon
+- Progress steps with loading animation
+- Color-coded badges (priority, sentiment)
+- Results cards with blue-teal gradients
+
+#### **4. Calls List** (`/calls`)
+**Purpose:** Browse and filter all processed calls
+
+**Features:**
+- Status filter buttons: All, Pending, Approved, Rejected
+- Data table with columns:
+  - Filename
+  - Summary (truncated to 50 chars)
+  - Risk Level (high/medium/low)
+  - Opportunity Level
+  - Priority Score
+  - Status
+- "View Details" button for each call
+- Empty state when no calls exist
+
+**Interactions:**
+- Click status filters to filter table
+- Click "View Details" to open CallDetail page
+- Refresh button to reload data
+
+**Design:**
+- Status badges with color coding:
+  - Pending: Yellow
+  - Approved: Green
+  - Rejected: Red
+- Risk badges: High (red), Medium (orange), Low (green)
+- Compact table rows
+
+#### **5. Call Detail** (`/calls/:id`)
+**Purpose:** Detailed view of single call analysis
+
+**Sections:**
+1. **Approval Workflow**
+   - Approve/Reject buttons
+   - Notes textarea for feedback
+   - Only visible when status = "pending_approval"
+
+2. **Final Decision Card**
+   - Recommended action
+   - Assigned team
+   - Priority score (0-100)
+   - Priority level badge
+   - Approval status
+   - Reasoning
+
+3. **Transcript Section**
+   - Full call transcript
+   - Detected language
+   - Copy button (SVG clipboard icon)
+
+4. **NLP Analysis Grid**
+   - Sentiment scores (compound, positive, neutral, negative)
+   - Detected intent
+   - Keywords by category
+   - Extracted entities
+
+5. **LLM Intelligence Card**
+   - Call summary
+   - Risk level assessment
+   - Opportunity level
+   - Raw LLM reasoning
+
+**Design:**
+- 5 distinct sections with clear headers
+- Color-coded badges throughout
+- Compact grid layouts
+- SVG icons for actions
+
+#### **6. Knowledge Base** (`/knowledge`)
+**Purpose:** Manage company context for RAG system
+
+**Features:**
+- Upload company policy text
+- View RAG system status:
+  - Documents indexed
+  - Total chunks
+  - Status (ready/disabled)
+- Example template with best practices
+
+**Status:**
+- RAG Disabled on Windows (ChromaDB compatibility)
+- Show status badge: "RAG: Disabled (Windows)"
+
+**Design:**
+- Textarea for policy input
+- Upload button with SVG icon
+- Status card with stats
+- Example template box
+
+---
+
+## User Flow Example
+
+### Scenario: Customer Cancellation Call
+
+1. **User uploads** `angry_customer.wav` on Process Call page
+2. **Backend processes** in 8 steps (6-8 seconds total)
+3. **Results shown:**
+   ```
+   Final Decision:
+   - Action: "Escalate to retention team within 24 hours"
+   - Priority: URGENT (95/100)
+   - Assigned: Retention Team
+   - Risk: HIGH
+   
+   Transcript:
+   "I'm really frustrated with the service. I want to cancel immediately."
+   
+   Sentiment:
+   - Compound: -0.82 (Very Negative)
+   - Intent: cancel_request
+   - Keywords: cancel, frustrated
+   ```
+
+4. **User navigates** to Dashboard → sees "High Risk Calls: 1"
+5. **User opens** Calls List → filters by "Pending"
+6. **User clicks** "View Details" → sees full analysis
+7. **Manager approves** action → adds note "Assigned to Sarah - priority case"
+8. **System updates** status to "approved" → shows in dashboard
+
+---
+
+## API Endpoints
+
+### Backend Endpoints (FastAPI)
+
+```
+GET  /                           → Health check
+GET  /health                     → Detailed service status
+POST /process_call               → Upload audio + get full analysis
+POST /transcribe                 → Audio → transcript only
+POST /analyze                    → Transcript → NLP only
+POST /intelligence               → Transcript + NLP → LLM only
+POST /analyze_complete           → Transcript → NLP + LLM + Rules
+GET  /calls                      → Retrieve all calls
+GET  /calls/{id}                 → Get single call by ID
+PUT  /calls/{id}/approve         → Approve pending action
+PUT  /calls/{id}/reject          → Reject pending action
+GET  /dashboard/metrics          → Dashboard statistics
+POST /company_context            → Upload RAG context
+GET  /rag/stats                  → RAG system status
+```
+
+### Frontend API Service (`services/api.js`)
+
+All frontend components use this centralized service:
+```javascript
+processCall(formData)           → POST /process_call
+getCalls()                      → GET /calls
+getCallById(id)                 → GET /calls/:id
+approveAction(id, notes)        → PUT /calls/:id/approve
+rejectAction(id, notes)         → PUT /calls/:id/reject
+getDashboardMetrics()           → GET /dashboard/metrics
+uploadCompanyContext(text)      → POST /company_context
+getRagStats()                   → GET /rag/stats
+```
+
+---
+
+## System Status
+
+### ✅ COMPLETE & WORKING
+
+1. **Speech-to-Text**: OpenAI Whisper (base model)
+2. **NLP Analysis**: VADER + spaCy + keyword detection
+3. **LLM Intelligence**: Groq Llama 3.1-8b-instant
+4. **Business Rules Engine**: 6 validation rules implemented
+5. **Database**: MongoDB storage with approval workflow
+6. **API Integration**: FastAPI backend fully connected
+7. **Dashboard UI**: React frontend with 6 pages
+8. **File Upload**: Audio processing with drag-drop
+
+### ⚠️ DISABLED (Implementation Complete)
+
+- **RAG Service**: Disabled on Windows (ChromaDB issue)
+  - Code: Fully implemented in `services/rag_service.py`
+  - Status: Works on Linux/Docker
+  - Impact: LLM still works without RAG context
+  - Future: Enable in production deployment
+
+### 🎯 HACKATHON REQUIREMENTS STATUS
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| Speech-to-Text | ✅ COMPLETE | Whisper base model |
+| NLP Analysis | ✅ COMPLETE | VADER + spaCy + keywords |
+| Action Engine | ✅ COMPLETE | 6 business rules + LLM |
+| Dashboard UI | ✅ COMPLETE | React 6-page app |
+| API Integration | ✅ COMPLETE | FastAPI + MongoDB |
+
+**Score: 5/5 Requirements Met**
+
+---
+
+## Quick Start
+
+### Backend Setup
+
 ```bash
+# Navigate to backend
 cd backend
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+# Create .env file with:
+GROQ_API_KEY=your_groq_api_key
+MONGODB_URI=mongodb://localhost:27017
+
+# Run server
+python app.py
+# Server starts at http://localhost:8000
+```
+
+### Frontend Setup
+
+```bash
+# Navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+# App opens at http://localhost:3000
+```
+
+### Test the System
+
+```bash
+# Backend directory
+cd backend
+
+# Test transcription
 python test_api.py
-```
 
-### Test NLP Analysis
-```bash
+# Test NLP
 python test_nlp.py
-```
 
-### Test LLM Intelligence
-```bash
+# Test LLM
 python test_llm.py
+
+# Test action engine
+python test_action_engine.py
+
+# Test complete pipeline
+python test_complete_backend.py
 ```
 
 ---
 
-## 📊 Features
+## Technology Stack
 
-### ✅ Completed (Steps 1-3)
+### Backend
+- **Framework**: FastAPI 0.115+
+- **Database**: MongoDB with Motor (async driver)
+- **Speech-to-Text**: OpenAI Whisper (openai/whisper-base)
+- **NLP**: 
+  - VADER Sentiment Analyzer
+  - spaCy (en_core_web_sm)
+  - Custom keyword detection
+- **LLM**: Groq API (Llama 3.1-8b-instant)
+- **RAG**: ChromaDB + SentenceTransformers (disabled on Windows)
 
-- **Speech-to-Text**: OpenAI Whisper with multi-speaker detection
-- **Sentiment Analysis**: VADER with compound scoring
-- **Keyword Detection**: 10 business categories (demo, pricing, complaint, etc.)
-- **Entity Extraction**: Regex-based (Money, Dates, Organizations)
-- **Intent Classification**: 9 intent types with rule-based logic
-- **LLM Intelligence**: Groq Llama 3.1 for contextual reasoning
-- **Priority Scoring**: Automated 0-100 urgency calculation
-- **Risk Assessment**: High/Medium/Low churn and complaint detection
-- **Opportunity Detection**: Lead qualification and upsell signals
+### Frontend
+- **Framework**: React 18
+- **Routing**: React Router v6
+- **Styling**: CSS3 with gradients and animations
+- **Icons**: SVG (Heroicons style)
+- **HTTP Client**: Fetch API
+- **Design System**: 
+  - Colors: Sky Blue (#0284c7) + Teal (#0891b2)
+  - Typography: 14px base, compact spacing
+  - Layout: CSS Grid + Flexbox
 
-### 🔜 Coming Soon (Steps 4-6)
-
-- **Business Rules Engine**: Action validation and override logic
-- **CRM Integration**: Salesforce, HubSpot, Zoho connectors
-- **Dashboard UI**: Real-time call monitoring and analytics
-- **Email Automation**: Triggered follow-ups based on actions
-- **Analytics & Reporting**: Conversion tracking, objection patterns
-- **Multi-language Support**: Extended language models
-
----
-
-## 📁 Project Structure
-
-```
-AI-Driven-Call-Intelligence-Next-Best-Action/
-├── backend/
-│   ├── services/
-│   │   ├── transcription_service.py    # Whisper STT
-│   │   ├── nlp_service.py              # Sentiment, keywords, entities
-│   │   └── llm_service.py              # Groq LLM intelligence
-│   ├── app.py                          # FastAPI application
-│   ├── requirements.txt                # Python dependencies
-│   ├── .env                            # API keys (not in git)
-│   ├── test_api.py                     # Transcription tests
-│   ├── test_nlp.py                     # NLP analysis tests
-│   └── test_llm.py                     # LLM intelligence tests
-├── 01_problem_statement.md             # Business problem analysis
-├── 02_product_requirements_document.md # PRD specification
-├── 03_solution_architecture.md         # Technical architecture
-├── .gitignore
-└── README.md
-```
+### Infrastructure
+- **API Server**: Uvicorn (ASGI)
+- **File Storage**: Local filesystem (backend/uploads/)
+- **Port Configuration**: 
+  - Backend: 8000
+  - Frontend: 3000
 
 ---
 
-## 🔐 Environment Variables
+## Hackathon Differentiators
 
-Create a `.env` file in the `backend/` directory:
+### What Makes This Unique
 
-```env
-GROQ_API_KEY=your_groq_api_key_here
-ELEVENLABS_API_KEY=your_elevenlabs_key_here  # Optional
-```
+1. **8-Step Intelligence Pipeline**
+   - Most solutions stop at transcription + basic NLP
+   - We go further: STT → NLP → RAG → LLM → Rules → DB → UI
 
----
+2. **RAG-Enhanced Context** (Production Feature)
+   - Company policy integration
+   - Context-aware recommendations
+   - Enterprise-ready knowledge base
 
-## 🛠️ Tech Stack
+3. **Business Rules Engine**
+   - Not just AI suggestions
+   - Automated approval/escalation logic
+   - Priority scoring algorithm
 
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | FastAPI 0.115+ |
-| **Speech-to-Text** | OpenAI Whisper (base model) |
-| **Sentiment** | VADER Sentiment Analyzer |
-| **LLM** | Groq (Llama 3.1-8b-instant) |
-| **Server** | Uvicorn (ASGI) |
-| **Python** | 3.12+ |
+4. **Real-Time Dashboard**
+   - Live metrics and monitoring
+   - Sentiment distribution
+   - Risk/opportunity tracking
 
----
+5. **Complete Approval Workflow**
+   - Pending → Approved → Rejected states
+   - Manager review system
+   - Audit trail with notes
 
-## 📈 Use Cases
-
-### Sales Teams
-- Automatic demo scheduling from positive calls
-- Objection pattern detection
-- Competitor mention tracking
-- Qualified lead identification
-
-### Support Teams
-- Churn risk detection (cancel keywords + negative sentiment)
-- Escalation triggers for frustrated customers
-- Issue categorization
-- First-call resolution tracking
-
-### Operations
-- Call quality monitoring
-- Agent performance insights
-- Compliance keyword detection
-- SLA breach prevention
+6. **Production-Grade Architecture**
+   - Async processing
+   - Error handling
+   - Modular services
+   - API documentation
 
 ---
 
-## 🤝 Contributing
+## Project Files
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Backend Key Files
+- `app.py` - FastAPI application (400+ lines)
+- `services/transcription_service.py` - Whisper STT
+- `services/nlp_service.py` - NLP analysis (250+ lines)
+- `services/llm_service.py` - Groq LLM integration
+- `services/action_engine.py` - Business rules (6 rules)
+- `services/database_service.py` - MongoDB operations
+- `services/rag_service.py` - ChromaDB RAG system
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Frontend Key Files
+- `src/App.js` - Main router + navigation
+- `src/App.css` - Complete design system (1000+ lines)
+- `src/components/Home.js` - Landing page
+- `src/components/Dashboard.js` - Analytics dashboard
+- `src/components/ProcessCall.js` - Upload interface
+- `src/components/CallsList.js` - Call table view
+- `src/components/CallDetail.js` - Detailed analysis
+- `src/components/CompanyContext.js` - RAG management
+- `src/services/api.js` - API client
 
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👤 Author
-
-**Naveen Arul**
-
-- GitHub: [@Naveen-Arul](https://github.com/Naveen-Arul)
-- Repository: [AI-Driven-Call-Intelligence-Next-Best-Action](https://github.com/Naveen-Arul/AI-Driven-Call-Intelligence-Next-Best-Action)
-
----
-
-## 🙏 Acknowledgments
-
-- OpenAI Whisper for speech recognition
-- Groq for ultra-fast LLM inference
-- FastAPI for modern Python web framework
-- VADER for sentiment analysis
+### Documentation
+- `01_problem_statement.md` - Business analysis
+- `02_product_requirements_document.md` - PRD
+- `03_solution_architecture.md` - Technical design
+- `README.md` - This file
 
 ---
 
-## 📞 Support
+## Future Enhancements
 
-For issues, questions, or suggestions, please open an issue on GitHub.
+1. Enable RAG on Linux/Docker deployment
+2. Add real-time audio streaming
+3. Multi-language support (99 languages available)
+4. Export reports to PDF/CSV
+5. Email notifications for urgent cases
+6. CRM integration (Salesforce, HubSpot)
+7. Voice analytics (tone, pace, interruptions)
+8. Team performance analytics
 
 ---
 
-**Built with ❤️ for transforming call data into actionable intelligence**
+## License
+
+MIT License - See LICENSE file for details
+
+---
+
+**Built for AI Hackathon 2026**
+*Transforming call recordings into automated business intelligence*

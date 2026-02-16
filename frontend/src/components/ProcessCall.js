@@ -68,7 +68,12 @@ function ProcessCall() {
     return (
       <div>
         <div className="page-header">
-          <h1 className="page-title">✅ Call Processed Successfully</h1>
+          <h1 className="page-title">
+            <svg className="page-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            Call Processed Successfully
+          </h1>
           <p className="page-subtitle">Call ID: {result.call_id}</p>
         </div>
 
@@ -78,7 +83,13 @@ function ProcessCall() {
 
         {/* Final Decision */}
         <div className="card">
-          <h2 className="card-header">📋 Final Decision</h2>
+          <h2 className="card-header">
+            <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+            </svg>
+            Final Decision
+          </h2>
           <div className="detail-grid">
             <div className="detail-item">
               <div className="detail-label">Recommended Action</div>
@@ -137,7 +148,12 @@ function ProcessCall() {
 
         {/* Transcript */}
         <div className="card mt-3">
-          <h2 className="card-header">📝 Transcript</h2>
+          <h2 className="card-header">
+            <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+            </svg>
+            Transcript
+          </h2>
           <div style={{padding: '1rem', background: '#f8fafc', borderRadius: '8px', whiteSpace: 'pre-wrap'}}>
             {result.transcript}
           </div>
@@ -145,7 +161,12 @@ function ProcessCall() {
 
         {/* Sentiment */}
         <div className="card mt-3">
-          <h2 className="card-header">💭 Sentiment Analysis</h2>
+          <h2 className="card-header">
+            <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
+            </svg>
+            Sentiment Analysis
+          </h2>
           <div className="detail-grid">
             <div className="detail-item">
               <div className="detail-label">Overall Sentiment</div>
@@ -191,7 +212,12 @@ function ProcessCall() {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">🎙️ Process Call Recording</h1>
+        <h1 className="page-title">
+          <svg className="page-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+          </svg>
+          Process Call Recording
+        </h1>
         <p className="page-subtitle">Upload an audio file for complete AI analysis</p>
       </div>
 
@@ -202,8 +228,12 @@ function ProcessCall() {
       )}
 
       <div className="card">
-        <h2 className="card-header">Upload Audio File</h2>
-        
+        <h2 className="card-header">
+          <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+          Upload Audio File
+        </h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <div
@@ -225,7 +255,9 @@ function ProcessCall() {
               
               {selectedFile ? (
                 <div>
-                  <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🎵</div>
+                  <svg style={{width: '60px', height: '60px', margin: '0 auto 1rem', color: '#0284c7'}} viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                  </svg>
                   <div style={{fontSize: '1.25rem', fontWeight: 600, color: '#1e293b'}}>
                     {selectedFile.name}
                   </div>
@@ -238,7 +270,9 @@ function ProcessCall() {
                 </div>
               ) : (
                 <div>
-                  <div style={{fontSize: '3rem', marginBottom: '1rem'}}>📁</div>
+                  <svg style={{width: '60px', height: '60px', margin: '0 auto 1rem', color: '#cbd5e1'}} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
                   <div style={{fontSize: '1.25rem', fontWeight: 600, color: '#1e293b', marginBottom: '0.5rem'}}>
                     Drop audio file here or click to browse
                   </div>
@@ -262,7 +296,7 @@ function ProcessCall() {
                   Processing...
                 </>
               ) : (
-                <>🚀 Process Call</>
+                'Process Call'
               )}
             </button>
             
@@ -294,7 +328,12 @@ function ProcessCall() {
       </div>
 
       <div className="card mt-3">
-        <h2 className="card-header">📊 What Happens Next?</h2>
+        <h2 className="card-header">
+          <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          What Happens Next?
+        </h2>
         <div style={{color: '#475569', lineHeight: '1.8'}}>
           <p><strong>The system will automatically:</strong></p>
           <ul style={{marginLeft: '1.5rem', marginTop: '0.5rem'}}>

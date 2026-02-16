@@ -50,7 +50,13 @@ function CallsList() {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">📋 Calls Management</h1>
+        <h1 className="page-title">
+          <svg className="page-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+            <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+          </svg>
+          Calls Management
+        </h1>
         <p className="page-subtitle">View and manage all processed calls</p>
       </div>
 
@@ -102,7 +108,10 @@ function CallsList() {
             Calls ({calls.length})
           </h2>
           <button className="btn btn-secondary" onClick={loadCalls}>
-            🔄 Refresh
+            <svg style={{width: '18px', height: '18px'}} viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            Refresh
           </button>
         </div>
 
@@ -110,7 +119,9 @@ function CallsList() {
           <div className="loading-spinner"></div>
         ) : calls.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📞</div>
+              <svg className="empty-state-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+              </svg>
             <div className="empty-state-title">No calls found</div>
             <p style={{color: '#64748b', marginTop: '0.5rem'}}>
               {statusFilter ? `No ${statusFilter} calls available` : 'Process your first call to get started'}

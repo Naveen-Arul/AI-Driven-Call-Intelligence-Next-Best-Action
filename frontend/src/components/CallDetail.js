@@ -85,7 +85,12 @@ function CallDetail() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="page-title">📞 Call Details</h1>
+            <h1 className="page-title">
+              <svg className="page-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+              </svg>
+              Call Details
+            </h1>
             <p className="page-subtitle">ID: {call._id}</p>
           </div>
           <button className="btn btn-secondary" onClick={() => navigate('/calls')}>
@@ -143,14 +148,14 @@ function CallDetail() {
                 onClick={handleApprove}
                 disabled={actionLoading}
               >
-                ✅ Approve Action
+                Approve Action
               </button>
               <button
                 className="btn btn-danger"
                 onClick={handleReject}
                 disabled={actionLoading}
               >
-                ❌ Reject Action
+                Reject Action
               </button>
             </div>
           </div>
@@ -165,7 +170,13 @@ function CallDetail() {
 
       {/* Final Decision */}
       <div className="card mt-3">
-        <h2 className="card-header">📋 Final Decision</h2>
+        <h2 className="card-header">
+          <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+            <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+          </svg>
+          Final Decision
+        </h2>
         <div className="detail-grid">
           <div className="detail-item">
             <div className="detail-label">Recommended Action</div>
@@ -260,7 +271,12 @@ function CallDetail() {
 
       {/* Transcript */}
       <div className="card mt-3">
-        <h2 className="card-header">📝 Transcript</h2>
+        <h2 className="card-header">
+          <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+          </svg>
+          Transcript
+        </h2>
         <div style={{padding: '1rem', background: '#f8fafc', borderRadius: '8px', whiteSpace: 'pre-wrap'}}>
           {call.transcript}
         </div>
@@ -268,7 +284,12 @@ function CallDetail() {
 
       {/* NLP Analysis */}
       <div className="card mt-3">
-        <h2 className="card-header">🧠 NLP Analysis</h2>
+        <h2 className="card-header">
+          <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+          </svg>
+          NLP Analysis
+        </h2>
         <div className="detail-grid">
           <div className="detail-item">
             <div className="detail-label">Sentiment</div>
@@ -317,7 +338,12 @@ function CallDetail() {
 
       {/* LLM Output */}
       <div className="card mt-3">
-        <h2 className="card-header">🤖 LLM Intelligence</h2>
+        <h2 className="card-header">
+          <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          LLM Intelligence
+        </h2>
         <div className="detail-grid">
           <div className="detail-item">
             <div className="detail-label">Risk Assessment</div>

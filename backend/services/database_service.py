@@ -125,6 +125,18 @@ class DatabaseService:
             print(f"Error retrieving call {call_id}: {e}")
             return None
     
+    def get_call_by_id(self, call_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a call by ID (alias for get_call for compatibility).
+        
+        Args:
+            call_id: MongoDB ObjectId as string
+        
+        Returns:
+            Call document or None
+        """
+        return self.get_call(call_id)
+    
     def get_all_calls(
         self,
         limit: int = 100,

@@ -8,7 +8,19 @@ function ProcessCall() {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
+
+  const processingSteps = [
+    { id: 1, name: 'Uploading Audio', icon: '📤', description: 'Sending audio file to server', duration: 1000 },
+    { id: 2, name: 'Speech-to-Text', icon: '🎙️', description: 'Converting speech using OpenAI Whisper', duration: 3000 },
+    { id: 3, name: 'NLP Analysis', icon: '🧠', description: 'Analyzing sentiment, keywords, entities', duration: 2000 },
+    { id: 4, name: 'RAG Context', icon: '📚', description: 'Retrieving company policies', duration: 1500 },
+    { id: 5, name: 'LLM Intelligence', icon: '🤖', description: 'Generating AI recommendations with Groq', duration: 2500 },
+    { id: 6, name: 'Business Rules', icon: '⚖️', description: 'Applying validation rules', duration: 1000 },
+    { id: 7, name: 'Database Storage', icon: '💾', description: 'Saving to MongoDB', duration: 1000 },
+    { id: 8, name: 'Complete', icon: '✅', description: 'Analysis ready!', duration: 500 }
+  ];
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -46,15 +58,30 @@ function ProcessCall() {
     setProcessing(true);
     setError(null);
     setResult(null);
+    setCurrentStep(0);
+
+    // Animate through processing steps
+    const animateSteps = async () => {
+      for (let i = 0; i < processingSteps.length - 1; i++) {
+        setCurrentStep(i);
+        await new Promise(resolve => setTimeout(resolve, processingSteps[i].duration));
+      }
+    };
+
+    // Start animation
+    animateSteps();
 
     try {
       const response = await processCall(selectedFile);
+      setCurrentStep(processingSteps.length - 1); // Set to complete step
+      await new Promise(resolve => setTimeout(resolve, 500)); // Show complete for a moment
       setResult(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to process call. Please try again.');
       console.error('Process call error:', err);
     } finally {
       setProcessing(false);
+      setCurrentStep(0);
     }
   };
 
@@ -313,19 +340,169 @@ function ProcessCall() {
         </form>
 
         {processing && (
-          <div className="alert alert-info mt-3">
-            <strong>Processing Pipeline:</strong>
-            <ol style={{marginTop: '0.5rem', marginLeft: '1.5rem'}}>
-              <li>Transcribing audio (Whisper STT)</li>
-              <li>Analyzing transcript (NLP)</li>
-              <li>Retrieving company context (RAG)</li>
-              <li>Generating intelligence (LLM)</li>
-              <li>Applying business rules</li>
-              <li>Storing in database</li>
-            </ol>
+          <div className="mt-3" style={{
+            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+            border: '2px solid #0284c7',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            animation: 'pulse 2s ease-in-out infinite'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                color: '#0c4a6e',
+                margin: 0
+              }}>
+                <span className="loading-spinner" style={{
+                  width: '24px',
+                  height: '24px',
+                  marginRight: '12px',
+                  borderWidth: '3px',
+                  display: 'inline-block',
+                  verticalAlign: 'middle'
+                }}></span>
+                Processing Your Call...
+              </h3>
+              <span style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#0284c7'
+              }}>
+                Step {currentStep + 1} of {processingSteps.length}
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{
+              width: '100%',
+              height: '12px',
+              background: '#cbd5e1',
+              borderRadius: '6px',
+              overflow: 'hidden',
+              marginBottom: '1.5rem',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{
+                width: `${((currentStep + 1) / processingSteps.length) * 100}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, #0284c7 0%, #0891b2 100%)',
+                transition: 'width 0.5s ease-in-out',
+                boxShadow: '0 0 10px rgba(2,132,199,0.5)'
+              }}></div>
+            </div>
+
+            {/* Processing Steps */}
+            <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+              {processingSteps.map((step, index) => {
+                const isComplete = index < currentStep;
+                const isCurrent = index === currentStep;
+                const isPending = index > currentStep;
+
+                return (
+                  <div
+                    key={step.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '1rem',
+                      background: isCurrent ? '#ffffff' : isComplete ? '#e0f2fe' : '#f8fafc',
+                      borderRadius: '8px',
+                      border: isCurrent ? '2px solid #0284c7' : '1px solid #e2e8f0',
+                      transform: isCurrent ? 'scale(1.02)' : 'scale(1)',
+                      transition: 'all 0.3s ease-in-out',
+                      boxShadow: isCurrent ? '0 4px 12px rgba(2,132,199,0.2)' : 'none',
+                      opacity: isPending ? 0.5 : 1
+                    }}
+                  >
+                    <div style={{
+                      fontSize: '2rem',
+                      marginRight: '1rem',
+                      filter: isPending ? 'grayscale(100%)' : 'none',
+                      animation: isCurrent ? 'bounce 1s ease-in-out infinite' : 'none'
+                    }}>
+                      {step.icon}
+                    </div>
+                    <div style={{flex: 1}}>
+                      <div style={{
+                        fontWeight: '600',
+                        color: isCurrent ? '#0284c7' : isComplete ? '#059669' : '#64748b',
+                        fontSize: '1rem',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {step.name}
+                        {isComplete && ' ✓'}
+                        {isCurrent && ' ⚡'}
+                      </div>
+                      <div style={{
+                        fontSize: '0.875rem',
+                        color: '#64748b'
+                      }}>
+                        {step.description}
+                      </div>
+                    </div>
+                    {isCurrent && (
+                      <div className="loading-spinner" style={{
+                        width: '20px',
+                        height: '20px',
+                        borderWidth: '2px',
+                        margin: '0'
+                      }}></div>
+                    )}
+                    {isComplete && (
+                      <svg style={{width: '24px', height: '24px', color: '#059669'}} viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{
+              marginTop: '1rem',
+              padding: '1rem',
+              background: '#fef3c7',
+              borderRadius: '8px',
+              borderLeft: '4px solid #f59e0b'
+            }}>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#92400e',
+                margin: 0,
+                fontWeight: '500'
+              }}>
+                💡 <strong>Tip:</strong> Our AI is analyzing your call through multiple layers - this typically takes 8-12 seconds for a complete analysis.
+              </p>
+            </div>
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 10px rgba(2, 132, 199, 0);
+          }
+        }
+
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
+        }
+      `}</style>
 
       <div className="card mt-3">
         <h2 className="card-header">

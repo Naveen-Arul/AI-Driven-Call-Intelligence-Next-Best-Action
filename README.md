@@ -1,5 +1,5 @@
 # Call Intelligence Platform - Complete System Documentation
-
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ## Table of Contents
 1. [Overview](#overview)
 2. [Complete Backend Implementation](#complete-backend-implementation)

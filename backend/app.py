@@ -65,8 +65,8 @@ async def lifespan(app: FastAPI):
     rag_service = RAGService()
     rag_service.initialize()
     
-    # Initialize email service
-    email_service = EmailService()
+    # Initialize email service with LLM for AI-generated emails
+    email_service = EmailService(llm_service=llm_service)
     
     logger.info("✅ All services initialized successfully")
     yield

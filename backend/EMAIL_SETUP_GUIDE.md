@@ -209,6 +209,107 @@ Open `email_preview.html` in browser to preview.
 
 ---
 
+## Troubleshooting Connection Issues
+
+### Error: "Email server connection timeout"
+
+This error means the application cannot connect to Gmail's SMTP server. Common causes:
+
+**1. Firewall Blocking**
+- Windows Firewall may block ports 587 (TLS) or 465 (SSL)
+- Corporate firewall restrictions
+- Antivirus software blocking outbound connections
+
+**Solution:**
+```powershell
+# Allow Python through Windows Firewall (Run as Administrator)
+New-NetFirewallRule -DisplayName "Python SMTP" -Direction Outbound -Program "C:\Python\python.exe" -Action Allow
+
+# Or temporarily disable firewall to test
+# Control Panel → Windows Defender Firewall → Turn Windows Defender Firewall on or off
+```
+
+**2. Network Restrictions**
+- Using corporate/school network that blocks SMTP
+- VPN interfering with connections
+- ISP blocking email ports
+
+**Solution:**
+- Try from different network (home WiFi, mobile hotspot)
+- Disable VPN temporarily
+- Contact network administrator
+
+**3. Gmail SMTP Not Accessible**
+- Gmail servers temporarily down
+- Regional restrictions
+
+**Solution:**
+- Check https://www.google.com/appsstatus (Gmail status)
+- Try again after few minutes
+
+**4. Incorrect Credentials**
+- Using regular Gmail password instead of App Password
+- Typo in SENDER_PASSWORD
+
+**Solution:**
+- Regenerate App Password
+- Copy-paste carefully (remove spaces)
+- Verify SENDER_EMAIL is correct
+
+### ⚠️ Email is OPTIONAL
+
+**The platform works perfectly without email configured!**
+
+If you cannot set up email:
+1. Call processing still works
+2. All analysis features work
+3. Only email notifications are disabled
+
+The system will show a warning but continue working:
+```
+"Email feature disabled. Configure SENDER_EMAIL and SENDER_PASSWORD to enable."
+```
+
+### Testing Email Connection
+
+Create a test script:
+
+```python
+# test_email_connection.py
+import smtplib
+import ssl
+
+SMTP_SERVER = "smtp.gmail.com"
+EMAIL = "your_email@gmail.com"
+PASSWORD = "your_app_password"
+
+print("Testing TLS (port 587)...")
+try:
+    with smtplib.SMTP(SMTP_SERVER, 587, timeout=10) as server:
+        server.starttls()
+        server.login(EMAIL, PASSWORD)
+        print("✅ TLS Connection successful!")
+except Exception as e:
+    print(f"❌ TLS Failed: {e}")
+
+print("\nTesting SSL (port 465)...")
+try:
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(SMTP_SERVER, 465, timeout=10, context=context) as server:
+        server.login(EMAIL, PASSWORD)
+        print("✅ SSL Connection successful!")
+except Exception as e:
+    print(f"❌ SSL Failed: {e}")
+```
+
+Run:
+```bash
+cd backend
+python test_email_connection.py
+```
+
+---
+
 ## Support
 
 For issues:

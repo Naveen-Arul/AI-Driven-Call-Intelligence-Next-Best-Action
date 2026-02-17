@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCallById, approveAction, rejectAction, sendEmail } from '../services/api';
 import LoadingScreen from './LoadingScreen';
+import Notification from './Notification';
 
 function CallDetail() {
   const { callId } = useParams();
@@ -13,6 +14,7 @@ function CallDetail() {
   const [notes, setNotes] = useState('');
   const [emailRecipient, setEmailRecipient] = useState('naveenarul111@gmail.com');
   const [emailLoading, setEmailLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   const loadCallDetails = useCallback(async () => {
     try {
@@ -42,8 +44,12 @@ function CallDetail() {
       await approveAction(callId, notes || null);
       await loadCallDetails();
       setNotes('');
+      setNotification({ type: 'success', message: '✅ Action approved successfully!' });
     } catch (err) {
-      alert('Failed to approve action: ' + (err.response?.data?.detail || err.message));
+      setNotification({ 
+        type: 'error', 
+        message: `❌ Failed to approve: ${err.response?.data?.detail || err.message}` 
+      });
     } finally {
       setActionLoading(false);
     }
@@ -59,8 +65,12 @@ function CallDetail() {
       await rejectAction(callId, notes || null);
       await loadCallDetails();
       setNotes('');
+      setNotification({ type: 'success', message: '✅ Action rejected successfully!' });
     } catch (err) {
-      alert('Failed to reject action: ' + (err.response?.data?.detail || err.message));
+      setNotification({ 
+        type: 'error', 
+        message: `❌ Failed to reject: ${err.response?.data?.detail || err.message}` 
+      });
     } finally {
       setActionLoading(false);
     }
@@ -68,17 +78,26 @@ function CallDetail() {
 
   const handleSendEmail = async (emailType = 'action') => {
     if (!emailRecipient || !emailRecipient.includes('@')) {
-      alert('Please enter a valid email address');
+      setNotification({ type: 'warning', message: '⚠️ Please enter a valid email address' });
       return;
     }
 
     setEmailLoading(true);
+    setNotification({ type: 'info', message: '📧 Sending email... Please wait' });
+    
     try {
       await sendEmail(callId, emailRecipient, emailType);
-      alert(`Email sent successfully to ${emailRecipient}`);
+      setNotification({ 
+        type: 'success', 
+        message: `✅ Email sent successfully to ${emailRecipient}!` 
+      });
       await loadCallDetails();
     } catch (err) {
-      alert('Failed to send email: ' + (err.response?.data?.detail || err.message));
+      const errorMsg = err.response?.data?.detail || err.message;
+      setNotification({ 
+        type: 'error', 
+        message: `❌ Failed to send email: ${errorMsg}` 
+      });
     } finally {
       setEmailLoading(false);
     }
@@ -484,6 +503,16 @@ function CallDetail() {
           </div>
         </div>
       </div>
+
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+          duration={5000}
+        />
+      )}
     </div>
   );
 }

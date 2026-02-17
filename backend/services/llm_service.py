@@ -210,8 +210,8 @@ Return ONLY valid JSON. No markdown, no explanation, just JSON.
         call_data: Dict
     ) -> str:
         """
-        Generate a professional HTML email with AI-written detailed content.
-        Uses the website's blue-teal gradient design with rich, contextual information.
+        Generate a customer-facing email thanking them for their call and summarizing the conversation.
+        This email is sent TO THE CUSTOMER, not internal team.
         """
         
         # Extract key information
@@ -235,53 +235,56 @@ Return ONLY valid JSON. No markdown, no explanation, just JSON.
         keywords = nlp_analysis.get("keywords", {})
         intent = nlp_analysis.get("intent", "general_inquiry")
         
-        # Build AI prompt for detailed email content
-        prompt = f"""You are writing a detailed professional business email about a customer call analysis.
+        # Build AI prompt for customer-facing email
+        prompt = f"""You are writing a professional customer-facing email to someone who just had a call with our company.
 
-CALL DATA:
-- Transcript: "{transcript_text[:600]}"
+CALL DETAILS:
+- What the customer said: "{transcript_text[:600]}"
 - Call Summary: {call_summary}
-- Sentiment: Positive {sentiment.get('positive', 0)*100:.0f}%, Neutral {sentiment.get('neutral', 0)*100:.0f}%, Negative {sentiment.get('negative', 0)*100:.0f}%
-- Sentiment Label: {sentiment.get('sentiment_label', 'neutral')}
-- Intent: {intent}
-- Keywords Detected: {', '.join([k for cat in keywords.values() for k in cat][:5]) if keywords else 'None'}
-- Recommended Action: {recommended_action}
-- AI Reasoning: {reasoning}
-- Priority: {priority_level}
-- Risk Level: {risk_level}
+- Customer's Intent: {intent}
+- Topics Discussed: {', '.join([k for cat in keywords.values() for k in cat][:5]) if keywords else 'General conversation'}
+- Customer Sentiment: {sentiment.get('sentiment_label', 'neutral')}
 
-TASK: Write a DETAILED, CONVERSATIONAL email with these sections:
+TASK: Write a warm, professional email TO THE CUSTOMER with these sections:
 
-1. **Customer Call Update Title** - Creative title based on the call type (e.g., "Monitoring Opportunity", "Urgent Action Required", "Sales Opportunity")
+1. **Greeting** - Warm greeting thanking them for their call
 
-2. **Call Summary Section** - Write 2-3 sentences summarizing what happened in the call. Be specific and conversational.
+2. **Call Recap** - Summarize what was discussed in the call. Be specific about what they mentioned (products, concerns, requests, preferences). Write 2-3 sentences.
 
-3. **Key Highlights** - Create 3-5 bullet points with emojis about specific things mentioned in the call (topics, products, concerns, requests). Use actual details from the transcript.
+3. **Key Points** - Create 3-5 bullet points with emojis highlighting:
+   - What topics/products they asked about
+   - Any concerns or questions they raised
+   - Preferences they mentioned
+   - Next steps or follow-ups promised
 
-4. **Customer Sentiment Section** - Explain the sentiment scores in detail. Discuss what this means for churn risk and sales potential. Use percentages.
+4. **What We're Doing** - Explain what action we're taking based on their call (without using internal jargon). Be customer-friendly.
 
-5. **Action Required Section** - Clearly state what needs to be done next. Be specific and actionable.
+5. **Next Steps for Customer** - Tell them what they can expect from us or what they should do next.
 
-6. **Why This Action?** - Explain the reasoning behind the recommendation. Connect it to the call content and sentiment.
+6. **Closing** - Warm closing with contact information invitation
 
-7. **Priority and Risk Section** - Explain why this priority and risk level were assigned.
+IMPORTANT REQUIREMENTS:
+- Write TO the customer (use "you", "your call", "we're here to help")
+- NO internal links or platform URLs
+- NO admin/team language
+- Friendly, conversational, customer-service tone
+- Use emojis to make it engaging
+- Be specific about what was discussed
+- Make the customer feel valued and heard
+- Keep it concise but warm
 
-8. **Next Steps** - Provide clear next steps for the team member.
-
-FORMAT REQUIREMENTS:
+FORMAT:
 - Use HTML with inline styles
-- Use website colors: Blue (#0284c7), Teal (#0891b2), Orange (#f59e0b), Red (#dc2626), Green (#10b981)
-- Use emojis throughout (🍔, 💬, 📊, 🎯, ⚠️, etc.)
-- Make bullet points with <li> tags
+- Use heading tags (<h2>, <h3>)
+- Use bullet points (<ul>, <li>)
+- Use colors: Blue (#0284c7), Teal (#0891b2) for accents
 - Use <strong> for emphasis
-- Keep paragraphs clear with good spacing
-- Be conversational but professional
-- Include specific details from the transcript
+- Good spacing between sections
 
-IMPORTANT: Return ONLY the email content HTML (div elements with inline styles). No <html>, <head>, or <body> tags. Start directly with a div."""
+Return ONLY the email content HTML (starting with greeting). No outer html/body tags."""
 
         try:
-            logger.info("Generating AI-powered detailed email content")
+            logger.info("Generating customer-facing email content")
             
             # Call Groq API
             response = self.client.chat.completions.create(
@@ -289,15 +292,15 @@ IMPORTANT: Return ONLY the email content HTML (div elements with inline styles).
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a professional business email writer who creates detailed, engaging emails with specific insights from customer calls. You write in a friendly but professional tone with clear structure and actionable recommendations."
+                        "content": "You are a friendly customer service representative writing follow-up emails to customers after their calls. You write warm, professional emails that make customers feel valued and clearly communicate next steps."
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.5,  # More creative for detailed content
-                max_tokens=1500   # Longer for detailed email
+                temperature=0.6,  # More creative for customer-friendly tone
+                max_tokens=1200
             )
             
             ai_content = response.choices[0].message.content.strip()
@@ -306,21 +309,24 @@ IMPORTANT: Return ONLY the email content HTML (div elements with inline styles).
             if ai_content.startswith("```html") or ai_content.startswith("```"):
                 ai_content = ai_content.replace("```html", "").replace("```", "").strip()
             
-            logger.info("Detailed email content generated successfully")
+            logger.info("Customer email content generated successfully")
             
         except Exception as e:
-            logger.error(f"Error generating detailed email content: {str(e)}")
-            # Fallback to basic content
+            logger.error(f"Error generating customer email: {str(e)}")
+            # Fallback to basic customer-facing content
             ai_content = f"""
             <div style="padding: 20px;">
-                <h2 style="color: #0284c7;">📞 Customer Call Update</h2>
+                <h2 style="color: #0284c7;">Thank You for Your Call! 📞</h2>
+                <p>Dear Valued Customer,</p>
+                <p>Thank you for taking the time to speak with us. We appreciate you reaching out to our team.</p>
                 <p><strong>Call Summary:</strong> {call_summary}</p>
-                <p><strong>Recommended Action:</strong> {recommended_action}</p>
-                <p><strong>Priority:</strong> {priority_level.upper()} | <strong>Risk:</strong> {risk_level.upper()}</p>
+                <p>We're working on your request and will get back to you shortly.</p>
+                <p>If you have any questions, please don't hesitate to contact us.</p>
+                <p>Best regards,<br>Customer Service Team</p>
             </div>
             """
         
-        # Priority color matching website design
+        # Priority color
         priority_colors = {
             "urgent": "#dc2626",
             "high": "#ea580c",
@@ -329,98 +335,70 @@ IMPORTANT: Return ONLY the email content HTML (div elements with inline styles).
         }
         priority_color = priority_colors.get(priority_level.lower(), "#0891b2")
         
-        # Wrap AI content in website-styled email template
         call_id = str(call_data.get("_id", ""))
         filename = call_data.get("filename", "N/A")
-        # Wrap AI content in website-styled email template
         call_id = str(call_data.get("_id", ""))
         filename = call_data.get("filename", "N/A")
         
+        # Customer-facing email with company branding
         email_html = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Call Intelligence Platform - Call Analysis</title>
+    <title>Thank You for Your Call</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f3f4f6;">
     
-    <!-- Main Container -->
+    <!-- Email Container -->
     <table role="presentation" style="width: 100%; border-collapse: collapse; padding: 40px 20px;">
         <tr>
             <td>
                 <!-- Email Card -->
-                <div style="max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);">
+                <div style="max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
                     
-                    <!-- Header with Gradient (matching website) -->
+                    <!-- Header with gradient (customer-friendly) -->
                     <div style="background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%); padding: 40px 30px; text-align: center;">
-                        <div style="display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 50%; margin-bottom: 20px;">
+                        <div style="display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 50%; margin-bottom: 15px;">
                             <svg width="50" height="50" viewBox="0 0 24 24" fill="#ffffff">
-                                <path d="M12 14l9-5-9-5-9 5 9 5z"/>
-                                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                                <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                             </svg>
                         </div>
-                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
-                            Call Intelligence Platform
+                        <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 700; letter-spacing: -0.3px;">
+                            Thank You for Your Call! 📞
                         </h1>
-                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">
-                            AI-Powered Call Analysis Report
+                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.95); font-size: 15px; font-weight: 500;">
+                            We appreciate you taking the time to speak with us
                         </p>
                     </div>
                     
-                    <!-- Priority Banner -->
-                    <div style="background-color: {priority_color}; padding: 16px 30px; text-align: center;">
-                        <span style="color: #ffffff; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">
-                            ⚡ Priority: {priority_level.upper()} | Risk: {risk_level.upper()}
-                        </span>
-                    </div>
-                    
-                    <!-- AI-Generated Content -->
-                    <div style="padding: 35px 30px; color: #1f2937; line-height: 1.7; font-size: 15px;">
+                    <!-- Customer-facing content -->
+                    <div style="padding: 40px 35px; color: #1f2937; line-height: 1.7; font-size: 15px;">
                         {ai_content}
                     </div>
                     
-                    <!-- Interactive Button -->
-                    <div style="padding: 0 30px 30px 30px; text-align: center;">
-                        <a href="http://localhost:3000/calls/{call_id}" 
-                           style="display: inline-block; 
-                                  background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%); 
-                                  color: #ffffff; 
-                                  padding: 16px 40px; 
-                                  text-decoration: none; 
-                                  border-radius: 8px; 
-                                  font-weight: 700; 
-                                  font-size: 16px; 
-                                  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
-                                  letter-spacing: 0.3px;">
-                            View Full Call Details in Platform →
-                        </a>
-                    </div>
-                    
-                    <!-- Call Metadata -->
-                    <div style="background: #f9fafb; padding: 20px 30px; border-top: 1px solid #e5e7eb;">
-                        <table style="width: 100%; font-size: 12px; color: #6b7280;">
-                            <tr>
-                                <td style="padding: 5px 0;">📅 <strong>Processed:</strong> {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 5px 0;">🆔 <strong>Call ID:</strong> {call_id}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 5px 0;">📞 <strong>File:</strong> {filename}</td>
-                            </tr>
-                        </table>
+                    <!-- Contact Section -->
+                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 25px 35px; border-top: 1px solid #e5e7eb;">
+                        <h3 style="margin: 0 0 12px 0; color: #0c4a6e; font-size: 16px; font-weight: 600;">
+                            📧 Questions or Need Help?
+                        </h3>
+                        <p style="margin: 0; color: #0369a1; font-size: 14px; line-height: 1.6;">
+                            We're here to help! If you have any questions or need further assistance, please don't hesitate to reach out to us. You can reply to this email or contact our support team.
+                        </p>
                     </div>
                     
                     <!-- Footer -->
-                    <div style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                    <div style="background: #f9fafb; padding: 30px 35px; text-align: center; border-top: 1px solid #e5e7eb;">
                         <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px; font-weight: 600;">
                             Call Intelligence Platform
                         </p>
-                        <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.5;">
-                            Transforming call recordings into automated business intelligence<br>
-                            <em>This is an automated AI-generated email based on call analysis</em>
+                        <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.6;">
+                            Transforming customer conversations into exceptional service
+                        </p>
+                        <p style="margin: 15px 0 0 0; color: #9ca3af; font-size: 11px;">
+                            This email was sent to you because you recently had a call with us.<br>
+                            © {datetime.now().year} Call Intelligence Platform. All rights reserved.
                         </p>
                     </div>
                     

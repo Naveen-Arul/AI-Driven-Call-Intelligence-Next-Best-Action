@@ -217,82 +217,67 @@ class EmailService:
         return self.send_email(recipient_email, subject, html_content)
     
     def _create_fallback_email(self, call_data: Dict) -> str:
-        """Fallback email with website-matching design if LLM generation fails"""
+        """Customer-facing fallback email if LLM generation fails"""
         final_decision = call_data.get("final_decision", {})
         llm_result = call_data.get("llm_output", call_data.get("llm_result", {}))
         call_id = str(call_data.get("_id", ""))
-        priority_level = final_decision.get('priority_level', 'medium')
-        
-        # Priority colors matching website
-        priority_colors = {
-            "urgent": "#dc2626",
-            "high": "#ea580c", 
-            "medium": "#f59e0b",
-            "low": "#10b981"
-        }
-        priority_color = priority_colors.get(priority_level.lower(), "#0891b2")
         
         return f"""
 <!DOCTYPE html>
 <html>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6;">
     <table role="presentation" style="width: 100%; padding: 40px 20px;">
         <tr>
             <td>
-                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
                     
                     <!-- Header -->
                     <div style="background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%); padding: 40px 30px; text-align: center;">
-                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                            Call Intelligence Platform
+                        <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 700;">
+                            Thank You for Your Call! 📞
                         </h1>
-                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px;">
-                            🎯 Action Required
+                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.95); font-size: 15px;">
+                            We appreciate you taking the time to speak with us
                         </p>
-                    </div>
-                    
-                    <!-- Priority Banner -->
-                    <div style="background-color: {priority_color}; padding: 16px 30px; text-align: center;">
-                        <span style="color: #ffffff; font-weight: 700; font-size: 14px; text-transform: uppercase;">
-                            ⚡ Priority: {priority_level.upper()}
-                        </span>
                     </div>
                     
                     <!-- Content -->
-                    <div style="padding: 30px;">
-                        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                            <h2 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 18px;">
-                                📋 Recommended Action
-                            </h2>
-                            <p style="margin: 0; color: #0369a1; font-size: 16px;">
-                                {final_decision.get('final_action', 'Review call details')}
+                    <div style="padding: 35px;">
+                        <p style="color: #1f2937; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+                            Dear Valued Customer,
+                        </p>
+                        
+                        <p style="color: #1f2937; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+                            Thank you for your recent call with our team. We wanted to follow up and let you know that we've received your inquiry and are working on it.
+                        </p>
+                        
+                        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 16px;">📋 What We Discussed</h3>
+                            <p style="margin: 0; color: #0369a1; font-size: 14px; line-height: 1.6;">
+                                {llm_result.get('call_summary', 'We discussed your inquiry and concerns during our conversation.')}
                             </p>
                         </div>
                         
-                        <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                            <p style="margin: 0 0 10px 0; color: #1f2937;"><strong>Summary:</strong></p>
-                            <p style="margin: 0; color: #4b5563; font-size: 14px;">
-                                {llm_result.get('call_summary', 'Call analysis completed')}
-                            </p>
-                        </div>
-                        
-                        <div style="text-align: center; padding: 10px 0;">
-                            <a href="http://localhost:3000/calls/{call_id}" 
-                               style="display: inline-block; background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%); 
-                                      color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; 
-                                      font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
-                                View Full Details →
-                            </a>
-                        </div>
+                        <p style="color: #1f2937; font-size: 15px; line-height: 1.7; margin: 20px 0;">
+                            Our team is reviewing your request and will get back to you shortly with next steps.
+                        </p>
+                    </div>
+                    
+                    <!-- Contact Section -->
+                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 25px 35px; border-top: 1px solid #e5e7eb;">
+                        <h3 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 16px;">📧 Need Help?</h3>
+                        <p style="margin: 0; color: #0369a1; font-size: 14px; line-height: 1.6;">
+                            If you have any questions, please reply to this email or contact our support team.
+                        </p>
                     </div>
                     
                     <!-- Footer -->
-                    <div style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; color: #6b7280; font-size: 14px; font-weight: 600;">
+                    <div style="background: #f9fafb; padding: 25px 35px; text-align: center; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0 0 5px 0; color: #6b7280; font-size: 14px; font-weight: 600;">
                             Call Intelligence Platform
                         </p>
-                        <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 12px;">
-                            Transforming call recordings into automated intelligence
+                        <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                            Transforming customer conversations into exceptional service
                         </p>
                     </div>
                     

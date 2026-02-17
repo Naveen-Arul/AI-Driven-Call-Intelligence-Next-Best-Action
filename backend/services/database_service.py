@@ -50,6 +50,7 @@ class DatabaseService:
         """
         Serialize MongoDB document for JSON response.
         Converts ObjectId and datetime to strings.
+        Removes binary audio data (not JSON serializable).
         
         Args:
             call: MongoDB document
@@ -70,6 +71,11 @@ class DatabaseService:
         
         if "updated_at" in call and isinstance(call["updated_at"], datetime):
             call["updated_at"] = call["updated_at"].isoformat()
+        
+        # Remove binary audio data (not JSON serializable)
+        # Audio can be retrieved via separate endpoint if needed
+        if "audio_data" in call:
+            del call["audio_data"]
         
         return call
     

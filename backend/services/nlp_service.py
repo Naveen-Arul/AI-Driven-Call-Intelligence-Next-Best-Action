@@ -56,12 +56,13 @@ class NLPService:
         
         print("NLP models loaded successfully")
     
-    def analyze(self, transcript: str) -> Dict:
+    def analyze(self, transcript: str, segments: List[Dict] = None) -> Dict:
         """
         Analyze a call transcript and extract structured insights.
         
         Args:
             transcript: Full text transcript of the call
+            segments: Optional list of timestamped segments for granular analysis
             
         Returns:
             {
@@ -78,7 +79,16 @@ class NLPService:
                 "entities": [
                     {"text": str, "label": str}
                 ],
-                "intent": str
+                "intent": str,
+                "segment_sentiments": [
+                    {
+                        "start_time": float,
+                        "end_time": float,
+                        "text": str,
+                        "sentiment": {...},
+                        "emotion_label": str
+                    }
+                ]
             }
         """
         
@@ -101,6 +111,44 @@ class NLPService:
             "negative": sentiment_scores["neg"],
             "sentiment_label": sentiment_label
         }
+        
+        # --- Segment-Level Sentiment Analysis ---
+        segment_sentiments = []
+        if segments:
+            for segment in segments:
+                seg_sentiment = self.sentiment_analyzer.polarity_scores(segment.get("text", ""))
+                seg_compound = seg_sentiment["compound"]
+                
+                # Determine emotion label
+                if seg_compound >= 0.5:
+                    emotion = "happy"
+                    emoji = "😊"
+                elif seg_compound >= 0.05:
+                    emotion = "satisfied"
+                    emoji = "😌"
+                elif seg_compound <= -0.5:
+                    emotion = "angry"
+                    emoji = "😠"
+                elif seg_compound <= -0.05:
+                    emotion = "frustrated"
+                    emoji = "😐"
+                else:
+                    emotion = "neutral"
+                    emoji = "😶"
+                
+                segment_sentiments.append({
+                    "start_time": segment.get("start_time", 0),
+                    "end_time": segment.get("end_time", 0),
+                    "text": segment.get("text", ""),
+                    "sentiment": {
+                        "compound": seg_compound,
+                        "positive": seg_sentiment["pos"],
+                        "neutral": seg_sentiment["neu"],
+                        "negative": seg_sentiment["neg"]
+                    },
+                    "emotion_label": emotion,
+                    "emoji": emoji
+                })
         
         # --- Keyword Detection ---
         transcript_lower = transcript.lower()
@@ -134,7 +182,8 @@ class NLPService:
             "sentiment": sentiment_result,
             "keywords": detected_keywords,
             "entities": entities,
-            "intent": intent
+            "intent": intent,
+            "segment_sentiments": segment_sentiments
         }
     
     def _classify_intent(self, keywords: Dict, sentiment: str) -> str:

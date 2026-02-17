@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCallById, approveAction, rejectAction, sendEmail } from '../services/api';
+import { getCallById, approveAction, rejectAction, sendEmail, getCallAudio, exportCallReport } from '../services/api';
 import LoadingScreen from './LoadingScreen';
 import Notification from './Notification';
+import SentimentTimeline from './SentimentTimeline';
 
 function CallDetail() {
   const { callId } = useParams();
@@ -15,6 +16,7 @@ function CallDetail() {
   const [emailRecipient, setEmailRecipient] = useState('naveenarul111@gmail.com');
   const [emailLoading, setEmailLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
 
   const loadCallDetails = useCallback(async () => {
     try {
@@ -22,6 +24,18 @@ function CallDetail() {
       setError(null);
       const response = await getCallById(callId);
       setCall(response.data);
+      
+      // Load audio if available
+      if (response.data.audio_data || response.data.audio_filename) {
+        try {
+          const audioResponse = await getCallAudio(callId);
+          const audioBlob = new Blob([audioResponse.data], { type: audioResponse.headers['content-type'] || 'audio/wav' });
+          const url = URL.createObjectURL(audioBlob);
+          setAudioUrl(url);
+        } catch (audioErr) {
+          console.warn('Audio not available:', audioErr);
+        }
+      }
     } catch (err) {
       setError('Failed to load call details.');
       console.error('Load call details error:', err);
@@ -32,6 +46,13 @@ function CallDetail() {
 
   useEffect(() => {
     loadCallDetails();
+    
+    // Cleanup audio URL on unmount
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
   }, [loadCallDetails]);
 
   const handleApprove = async () => {
@@ -122,6 +143,32 @@ function CallDetail() {
       });
     } finally {
       setEmailLoading(false);
+    }
+  };
+
+  const handleExportReport = async () => {
+    try {
+      setNotification({ type: 'processing', message: '📄 Generating comprehensive report...' });
+      const response = await exportCallReport(callId);
+      
+      // Create download link
+      const dataStr = JSON.stringify(response.data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `call_report_${callId}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setNotification({ type: 'success', message: '✅ Report downloaded successfully!' });
+    } catch (err) {
+      setNotification({ 
+        type: 'error', 
+        message: `❌ Failed to export report: ${err.response?.data?.detail || err.message}` 
+      });
     }
   };
 

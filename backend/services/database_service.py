@@ -79,7 +79,9 @@ class DatabaseService:
         nlp_analysis: Dict[str, Any],
         llm_output: Dict[str, Any],
         final_decision: Dict[str, Any],
-        audio_filename: Optional[str] = None
+        audio_filename: Optional[str] = None,
+        audio_data: Optional[bytes] = None,
+        transcription_segments: Optional[List[Dict]] = None
     ) -> str:
         """
         Store complete call processing result.
@@ -90,6 +92,8 @@ class DatabaseService:
             llm_output: LLM service output
             final_decision: Action engine output
             audio_filename: Original audio filename (optional)
+            audio_data: Audio file binary data (optional)
+            transcription_segments: Timestamped segments (optional)
         
         Returns:
             call_id: MongoDB ObjectId as string
@@ -100,6 +104,8 @@ class DatabaseService:
             "llm_output": llm_output,
             "final_decision": final_decision,
             "audio_filename": audio_filename,
+            "audio_data": audio_data,  # Store audio binary data
+            "transcription_segments": transcription_segments,
             "status": "pending",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
@@ -282,3 +288,95 @@ class DatabaseService:
                 "sentiment_distribution": {},
                 "status_distribution": {}
             }
+    
+    def search_calls(
+        self,
+        search_query: Optional[str] = None,
+        sentiment: Optional[str] = None,
+        priority_min: Optional[int] = None,
+        priority_max: Optional[int] = None,
+        risk_level: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Search and filter calls with multiple criteria.
+        
+        Args:
+            search_query: Text search in transcript
+            sentiment: Filter by sentiment (positive/neutral/negative)
+            priority_min: Minimum priority score
+            priority_max: Maximum priority score
+            risk_level: Filter by risk level (high/medium/low)
+            date_from: Start date filter (ISO format)
+            date_to: End date filter (ISO format)
+            limit: Max results
+        
+        Returns:
+            List of matching call documents
+        """
+        try:
+            query = {}
+            
+            # Text search in transcript
+            if search_query:
+                query["$text"] = {"$search": search_query}
+            
+            # Sentiment filter
+            if sentiment:
+                query["nlp_analysis.sentiment.sentiment_label"] = sentiment
+            
+            # Priority range filter
+            if priority_min is not None or priority_max is not None:
+                priority_filter = {}
+                if priority_min is not None:
+                    priority_filter["$gte"] = priority_min
+                if priority_max is not None:
+                    priority_filter["$lte"] = priority_max
+                query["final_decision.priority_score"] = priority_filter
+            
+            # Risk level filter
+            if risk_level:
+                query["llm_output.risk_level"] = risk_level
+            
+            # Date range filter
+            if date_from or date_to:
+                date_filter = {}
+                if date_from:
+                    date_filter["$gte"] = datetime.fromisoformat(date_from)
+                if date_to:
+                    date_filter["$lte"] = datetime.fromisoformat(date_to)
+                query["created_at"] = date_filter
+            
+            calls = list(
+                self.calls_collection
+                .find(query)
+                .sort("final_decision.priority_score", DESCENDING)
+                .limit(limit)
+            )
+            
+            return [self._serialize_call(call) for call in calls]
+        except Exception as e:
+            print(f"Error searching calls: {e}")
+            return []
+    
+    def get_audio_data(self, call_id: str) -> Optional[bytes]:
+        """
+        Retrieve audio data for a call.
+        
+        Args:
+            call_id: MongoDB ObjectId as string
+        
+        Returns:
+            Audio binary data or None
+        """
+        try:
+            call = self.calls_collection.find_one(
+                {"_id": ObjectId(call_id)},
+                {"audio_data": 1}
+            )
+            return call.get("audio_data") if call else None
+        except Exception as e:
+            print(f"Error retrieving audio data: {e}")
+            return None

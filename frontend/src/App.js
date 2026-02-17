@@ -6,6 +6,7 @@ import ProcessCall from './components/ProcessCall';
 import CallsList from './components/CallsList';
 import CallDetail from './components/CallDetail';
 import CompanyContext from './components/CompanyContext';
+import VOCDashboard from './components/VOCDashboard';
 import './App.css';
 
 function App() {
@@ -66,6 +67,15 @@ function App() {
                   Knowledge Base
                 </NavLink>
               </li>
+              <li>
+                <NavLink to="/voc-insights" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <svg className="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                  VOC Insights
+                </NavLink>
+              </li>
             </ul>
           </div>
         </nav>
@@ -79,6 +89,7 @@ function App() {
             <Route path="/calls" element={<CallsList />} />
             <Route path="/calls/:callId" element={<CallDetail />} />
             <Route path="/knowledge" element={<CompanyContext />} />
+            <Route path="/voc-insights" element={<VOCDashboard />} />
           </Routes>
         </main>
       </div>

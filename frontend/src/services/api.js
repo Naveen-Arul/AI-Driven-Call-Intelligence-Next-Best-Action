@@ -59,6 +59,38 @@ export const sendEmail = (callId, recipientEmail, emailType = 'action') => {
   });
 };
 
+// VOC Insights
+export const getVOCInsights = (days = 30) => api.get('/voc/insights', { params: { days } });
+
+// Search & Filter
+export const searchCalls = (filters = {}) => {
+  return api.get('/calls/search', { params: filters });
+};
+
+// Audio Playback
+export const getCallAudio = (callId) => {
+  return api.get(`/calls/${callId}/audio`, {
+    responseType: 'blob',
+  });
+};
+
+// Batch Processing
+export const batchProcessCalls = (audioFiles) => {
+  const formData = new FormData();
+  audioFiles.forEach((file) => {
+    formData.append('files', file);
+  });
+  return api.post('/calls/batch', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    timeout: 600000, // 10 minutes for batch processing
+  });
+};
+
+// Export Report
+export const exportCallReport = (callId) => api.get(`/calls/${callId}/export`);
+
 // Individual Layer Endpoints (for debugging)
 export const transcribeAudio = (audioFile) => {
   const formData = new FormData();

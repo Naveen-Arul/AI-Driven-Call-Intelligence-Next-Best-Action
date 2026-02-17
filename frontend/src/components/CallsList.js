@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getCalls } from '../services/api';
+import { getCalls, searchCalls } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import LoadingScreen from './LoadingScreen';
 
@@ -8,6 +8,16 @@ function CallsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({
+    query: '',
+    sentiment: '',
+    minPriority: '',
+    maxPriority: '',
+    riskLevel: '',
+    startDate: '',
+    endDate: ''
+  });
   const navigate = useNavigate();
 
   const loadCalls = useCallback(async () => {
@@ -15,16 +25,57 @@ function CallsList() {
       setLoading(true);
       setError(null);
       
-      const params = statusFilter ? { status: statusFilter } : {};
-      const response = await getCalls(params);
-      setCalls(response.data.calls);
+      // Check if advanced search filters are active
+      const hasAdvancedFilters = searchFilters.query || searchFilters.sentiment || 
+        searchFilters.minPriority || searchFilters.maxPriority || 
+        searchFilters.riskLevel || searchFilters.startDate || searchFilters.endDate;
+      
+      if (hasAdvancedFilters) {
+        // Use search API
+        const filters = {};
+        if (searchFilters.query) filters.query = searchFilters.query;
+        if (searchFilters.sentiment) filters.sentiment = searchFilters.sentiment;
+        if (searchFilters.minPriority) filters.min_priority = parseInt(searchFilters.minPriority);
+        if (searchFilters.maxPriority) filters.max_priority = parseInt(searchFilters.maxPriority);
+        if (searchFilters.riskLevel) filters.risk_level = searchFilters.riskLevel;
+        if (searchFilters.startDate) filters.start_date = searchFilters.startDate;
+        if (searchFilters.endDate) filters.end_date = searchFilters.endDate;
+        if (statusFilter) filters.status = statusFilter;
+        
+        const response = await searchCalls(filters);
+        setCalls(response.data.calls);
+      } else {
+        // Use regular getCalls API
+        const params = statusFilter ? { status: statusFilter } : {};
+        const response = await getCalls(params);
+        setCalls(response.data.calls);
+      }
     } catch (err) {
       setError('Failed to load calls. Please ensure the backend is running.');
       console.error('Load calls error:', err);
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, searchFilters]);
+
+  const handleSearchFilterChange = (field, value) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const clearSearchFilters = () => {
+    setSearchFilters({
+      query: '',
+      sentiment: '',
+      minPriority: '',
+      maxPriority: '',
+      riskLevel: '',
+      startDate: '',
+      endDate: ''
+    });
+  };
 
   useEffect(() => {
     loadCalls();
@@ -69,9 +120,9 @@ function CallsList() {
 
       {/* Filters */}
       <div className="card mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
           <h2 className="card-header" style={{marginBottom: 0, paddingBottom: 0, border: 'none'}}>
-            Filters
+            Status Filters
           </h2>
           <div className="flex gap-2">
             <button
@@ -100,6 +151,138 @@ function CallsList() {
             </button>
           </div>
         </div>
+
+        {/* Advanced Search Toggle */}
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+          >
+            {showAdvancedSearch ? '▼' : '▶'} Advanced Search & Filters
+          </button>
+        </div>
+
+        {/* Advanced Search Panel */}
+        {showAdvancedSearch && (
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
+            <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+              {/* Text Search */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  🔍 Search Text
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search in transcript..."
+                  value={searchFilters.query}
+                  onChange={(e) => handleSearchFilterChange('query', e.target.value)}
+                />
+              </div>
+
+              {/* Sentiment Filter */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  😊 Sentiment
+                </label>
+                <select
+                  className="form-control"
+                  value={searchFilters.sentiment}
+                  onChange={(e) => handleSearchFilterChange('sentiment', e.target.value)}
+                >
+                  <option value="">All Sentiments</option>
+                  <option value="positive">Positive</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="negative">Negative</option>
+                </select>
+              </div>
+
+              {/* Risk Level Filter */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  ⚠️ Risk Level
+                </label>
+                <select
+                  className="form-control"
+                  value={searchFilters.riskLevel}
+                  onChange={(e) => handleSearchFilterChange('riskLevel', e.target.value)}
+                >
+                  <option value="">All Risk Levels</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+
+              {/* Priority Range */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  📊 Min Priority
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                  value={searchFilters.minPriority}
+                  onChange={(e) => handleSearchFilterChange('minPriority', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  📊 Max Priority
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="100"
+                  min="0"
+                  max="100"
+                  value={searchFilters.maxPriority}
+                  onChange={(e) => handleSearchFilterChange('maxPriority', e.target.value)}
+                />
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  📅 Start Date
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={searchFilters.startDate}
+                  onChange={(e) => handleSearchFilterChange('startDate', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                  📅 End Date
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={searchFilters.endDate}
+                  onChange={(e) => handleSearchFilterChange('endDate', e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Search Actions */}
+            <div className="flex gap-2" style={{ marginTop: '1rem' }}>
+              <button className="btn btn-primary" onClick={loadCalls}>
+                🔍 Apply Filters
+              </button>
+              <button className="btn btn-secondary" onClick={clearSearchFilters}>
+                ✖ Clear Filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Calls Table */}

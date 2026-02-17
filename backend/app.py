@@ -4,8 +4,8 @@ FastAPI Backend - Complete Product v5.0
 Full pipeline with MongoDB persistence and RAG-enhanced LLM
 """
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Response
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field
@@ -15,6 +15,8 @@ from pathlib import Path
 import shutil
 from dotenv import load_dotenv
 import io
+import base64
+import asyncio
 
 # Load environment variables
 load_dotenv()
@@ -26,6 +28,7 @@ from services.action_engine import ActionEngine
 from services.database_service import DatabaseService
 from services.rag_service import RAGService
 from services.email_service import EmailService
+from services.voc_service import VOCService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,12 +46,14 @@ action_engine = None
 db_service = None
 rag_service = None
 email_service = None
+voc_service = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
-    global transcription_service, nlp_service, llm_service, action_engine, db_service, rag_service, email_service
+    global transcription_service, nlp_service, llm_service, action_engine, db_service, rag_service, email_service, voc_service
+    
     logger.info("Starting Call Intelligence API v5.0...")
     
     # Initialize all services
@@ -67,6 +72,9 @@ async def lifespan(app: FastAPI):
     
     # Initialize email service with LLM for AI-generated emails
     email_service = EmailService(llm_service=llm_service)
+    
+    # Initialize VOC service
+    voc_service = VOCService()
     
     logger.info("✅ All services initialized successfully")
     yield
@@ -500,13 +508,14 @@ async def process_call(file: UploadFile = File(...)):
         logger.info("Step 1/5: Transcribing audio...")
         transcription_result = transcription_service.transcribe(str(temp_path))
         transcript = transcription_result["transcript"]
+        segments = transcription_result.get("segments", [])
         
         # Clean up temp file immediately
         temp_path.unlink()
         
-        # Step 2: NLP Analysis
+        # Step 2: NLP Analysis with segment-level sentiment
         logger.info("Step 2/5: Analyzing transcript (NLP)...")
-        nlp_analysis = nlp_service.analyze(transcript)
+        nlp_analysis = nlp_service.analyze(transcript, segments=segments)
         
         # Step 3: Get company context from RAG
         logger.info("Step 3/5: Retrieving company context (RAG)...")
@@ -533,14 +542,16 @@ async def process_call(file: UploadFile = File(...)):
             llm_output=llm_output
         )
         
-        # Step 6: Store in MongoDB
+        # Step 6: Store in MongoDB with audio data
         logger.info("💾 Storing in MongoDB...")
         call_id = db_service.store_call(
             transcript=transcript,
             nlp_analysis=nlp_analysis,
             llm_output=llm_output,
             final_decision=final_decision,
-            audio_filename=file.filename
+            audio_filename=file.filename,
+            audio_data=audio_bytes,  # Store audio binary data
+            transcription_segments=segments
         )
         
         logger.info(f"✅ Call processed successfully - ID: {call_id}")
@@ -853,6 +864,334 @@ async def send_email(request: SendEmailRequest):
         raise
     except Exception as e:
         logger.error(f"Failed to send email: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/voc/insights")
+async def get_voc_insights(
+    days: int = Query(30, description="Number of days to analyze")
+):
+    """
+    🔍 Get Voice of Customer insights across all calls.
+    
+    Returns:
+        - Word cloud data
+        - Top topics mentioned
+        - Feature requests
+        - Competitor mentions
+        - Product feedback sentiment
+        - Common pain points
+    """
+    try:
+        logger.info(f"Generating VOC insights for last {days} days...")
+        
+        # Get all calls (or filter by date if needed)
+        calls = db_service.get_all_calls(limit=1000)
+        
+        # Generate insights
+        insights = voc_service.generate_insights(calls)
+        
+        logger.info(f"✅ VOC insights generated for {insights['total_calls_analyzed']} calls")
+        
+        return JSONResponse(content=insights)
+        
+    except Exception as e:
+        logger.error(f"Failed to generate VOC insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/calls/search")
+async def search_calls(
+    q: Optional[str] = Query(None, description="Search query"),
+    sentiment: Optional[str] = Query(None, description="Filter by sentiment"),
+    priority_min: Optional[int] = Query(None, description="Min priority score"),
+    priority_max: Optional[int] = Query(None, description="Max priority score"),
+    risk_level: Optional[str] = Query(None, description="Filter by risk level"),
+    date_from: Optional[str] = Query(None, description="Start date (ISO format)"),
+    date_to: Optional[str] = Query(None, description="End date (ISO format)"),
+    limit: int = Query(100, description="Max results")
+):
+    """
+    🔍 Search and filter calls with multiple criteria.
+    
+    Args:
+        q: Text search in transcript
+        sentiment: positive/neutral/negative
+        priority_min: Minimum priority score (0-100)
+        priority_max: Maximum priority score (0-100)
+        risk_level: high/medium/low
+        date_from: Start date filter
+        date_to: End date filter
+        limit: Max results
+    
+    Returns:
+        List of matching calls
+    """
+    try:
+        logger.info(f"Searching calls with query: {q}, filters: sentiment={sentiment}, risk={risk_level}")
+        
+        calls = db_service.search_calls(
+            search_query=q,
+            sentiment=sentiment,
+            priority_min=priority_min,
+            priority_max=priority_max,
+            risk_level=risk_level,
+            date_from=date_from,
+            date_to=date_to,
+            limit=limit
+        )
+        
+        logger.info(f"✅ Found {len(calls)} matching calls")
+        
+        return JSONResponse(content={
+            "calls": calls,
+            "total": len(calls),
+            "filters": {
+                "query": q,
+                "sentiment": sentiment,
+                "priority_range": [priority_min, priority_max],
+                "risk_level": risk_level,
+                "date_range": [date_from, date_to]
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/calls/{call_id}/audio")
+async def get_call_audio(call_id: str):
+    """
+    🎵 Get audio file for a call.
+    
+    Args:
+        call_id: MongoDB ObjectId
+    
+    Returns:
+        Audio file stream
+    """
+    try:
+        logger.info(f"Retrieving audio for call {call_id}")
+        
+        # Get call data
+        call = db_service.get_call(call_id)
+        
+        if not call:
+            raise HTTPException(status_code=404, detail=f"Call {call_id} not found")
+        
+        # Get audio data
+        audio_data = call.get("audio_data")
+        
+        if not audio_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No audio data found for call {call_id}"
+            )
+        
+        # Determine content type from filename
+        filename = call.get("audio_filename", "audio.wav")
+        content_type = "audio/wav"
+        if filename.endswith(".mp3"):
+            content_type = "audio/mpeg"
+        elif filename.endswith(".m4a"):
+            content_type = "audio/mp4"
+        elif filename.endswith(".ogg"):
+            content_type = "audio/ogg"
+        
+        logger.info(f"✅ Streaming audio file: {filename}")
+        
+        return Response(
+            content=audio_data,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"inline; filename={filename}",
+                "Accept-Ranges": "bytes"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to retrieve audio: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/calls/batch")
+async def batch_process_calls(files: List[UploadFile] = File(...)):
+    """
+    ⚡ Process multiple audio files in batch.
+    
+    Args:
+        files: List of audio files
+    
+    Returns:
+        List of processing results with call IDs
+    """
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    
+    if len(files) > 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 10 files can be processed at once"
+        )
+    
+    try:
+        logger.info(f"🚀 Starting batch processing of {len(files)} files...")
+        
+        results = []
+        
+        for file in files:
+            try:
+                # Validate file
+                allowed_extensions = {".wav", ".mp3", ".m4a", ".ogg", ".flac"}
+                file_ext = Path(file.filename).suffix.lower()
+                
+                if file_ext not in allowed_extensions:
+                    results.append({
+                        "filename": file.filename,
+                        "status": "error",
+                        "error": f"Invalid file type: {file_ext}"
+                    })
+                    continue
+                
+                logger.info(f"Processing {file.filename}...")
+                
+                # Read file
+                audio_bytes = await file.read()
+                
+                # Save temporarily
+                temp_path = UPLOAD_FOLDER / file.filename
+                with temp_path.open("wb") as f:
+                    f.write(audio_bytes)
+                
+                # Process through pipeline
+                transcription_result = transcription_service.transcribe(str(temp_path))
+                transcript = transcription_result["transcript"]
+                segments = transcription_result.get("segments", [])
+                
+                temp_path.unlink()
+                
+                nlp_analysis = nlp_service.analyze(transcript, segments=segments)
+                company_context = rag_service.get_context_for_llm(transcript, nlp_analysis)
+                llm_output = llm_service.generate_intelligence(
+                    transcript, nlp_analysis, company_context=company_context
+                )
+                final_decision = action_engine.evaluate(nlp_analysis, llm_output)
+                
+                # Store in database
+                call_id = db_service.store_call(
+                    transcript=transcript,
+                    nlp_analysis=nlp_analysis,
+                    llm_output=llm_output,
+                    final_decision=final_decision,
+                    audio_filename=file.filename,
+                    audio_data=audio_bytes,
+                    transcription_segments=segments
+                )
+                
+                results.append({
+                    "filename": file.filename,
+                    "status": "success",
+                    "call_id": call_id,
+                    "priority_score": final_decision.get("priority_score"),
+                    "risk_level": llm_output.get("risk_level")
+                })
+                
+                logger.info(f"✅ {file.filename} processed successfully")
+                
+            except Exception as e:
+                logger.error(f"Failed to process {file.filename}: {str(e)}")
+                results.append({
+                    "filename": file.filename,
+                    "status": "error",
+                    "error": str(e)
+                })
+        
+        success_count = sum(1 for r in results if r["status"] == "success")
+        error_count = len(results) - success_count
+        
+        logger.info(f"✅ Batch processing complete: {success_count} success, {error_count} errors")
+        
+        return JSONResponse(content={
+            "total_files": len(files),
+            "successful": success_count,
+            "failed": error_count,
+            "results": results
+        })
+        
+    except Exception as e:
+        logger.error(f"Batch processing failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/calls/{call_id}/export")
+async def export_call_report(call_id: str):
+    """
+    📄 Export call analysis as structured report (JSON format).
+    
+    Args:
+        call_id: MongoDB ObjectId
+    
+    Returns:
+        Comprehensive call report
+    """
+    try:
+        logger.info(f"Exporting report for call {call_id}")
+        
+        call = db_service.get_call(call_id)
+        
+        if not call:
+            raise HTTPException(status_code=404, detail=f"Call {call_id} not found")
+        
+        # Create comprehensive report
+        report = {
+            "report_metadata": {
+                "call_id": call["_id"],
+                "generated_at": datetime.utcnow().isoformat(),
+                "report_version": "1.0"
+            },
+            "call_details": {
+                "filename": call.get("audio_filename"),
+                "processed_at": call.get("created_at"),
+                "status": call.get("status")
+            },
+            "transcript": call.get("transcript"),
+            "sentiment_analysis": call.get("nlp_analysis", {}).get("sentiment"),
+            "segment_sentiments": call.get("nlp_analysis", {}).get("segment_sentiments", []),
+            "keywords_detected": call.get("nlp_analysis", {}).get("keywords"),
+            "entities_extracted": call.get("nlp_analysis", {}).get("entities"),
+            "intent_classification": call.get("nlp_analysis", {}).get("intent"),
+            "ai_intelligence": {
+                "call_summary": call.get("llm_output", {}).get("call_summary_detailed"),
+                "risk_assessment": call.get("llm_output", {}).get("risk_level"),
+                "opportunity_assessment": call.get("llm_output", {}).get("opportunity_level"),
+                "reasoning": call.get("llm_output", {}).get("reasoning")
+            },
+            "recommended_action": {
+                "action": call.get("final_decision", {}).get("final_action"),
+                "priority_score": call.get("final_decision", {}).get("priority_score"),
+                "confidence_score": call.get("final_decision", {}).get("confidence_score"),
+                "escalation_required": call.get("final_decision", {}).get("escalation_required"),
+                "urgent_flag": call.get("final_decision", {}).get("urgent_flag"),
+                "rules_applied": call.get("final_decision", {}).get("rules_applied")
+            }
+        }
+        
+        logger.info(f"✅ Report generated for call {call_id}")
+        
+        return JSONResponse(
+            content=report,
+            headers={
+                "Content-Disposition": f"attachment; filename=call_report_{call_id}.json"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to export report: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -1,5 +1,25 @@
 # Call Intelligence Platform - Complete System Documentation
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+
+AI-Driven Call Intelligence & Next-Best-Action
+Background
+Sales and support teams handle numerous calls daily, but valuable insights often go unused. Manual review delays follow-ups and reduces conversion efficiency.
+Description
+Develop an AI-powered system that analyzes call recordings and recommends the next best action automatically.
+Key Features:
+Speech-to-text transcription of calls
+NLP-based analysis for sentiment, intent, keywords, and summaries
+Next-best-action engine (e.g., send follow-up email, schedule demo, reassign lead, create ticket)
+Dashboard for agents/managers to review and approve suggested actions
+Integration with CRM and telephony platforms
+Expected Solution
+A centralized web-based platform that converts call data into actionable insights and intelligent recommendations, improving productivity, response time, and conversion rates.
+Goal
+Enhance team efficiency and increase conversions through AI-driven call insights and automated next steps.
+
+
+
 ## Table of Contents
 1. [Overview](#overview)
 2. [Complete Backend Implementation](#complete-backend-implementation)

@@ -247,31 +247,32 @@ CALL DETAILS:
 
 TASK: Write a warm, professional email TO THE CUSTOMER with these sections:
 
-1. **Greeting** - Warm greeting thanking them for their call
+1. **Greeting** - Warm greeting thanking them for their call. Use emojis like 👋, 😊, 💙
 
-2. **Call Recap** - Summarize what was discussed in the call. Be specific about what they mentioned (products, concerns, requests, preferences). Write 2-3 sentences.
+2. **Call Recap** - Summarize what was discussed in the call. Be specific about what they mentioned (products, concerns, requests, preferences). Write 2-3 sentences. Use relevant emojis like 💬, 🗣️, 📝, ✨
 
-3. **Key Points** - Create 3-5 bullet points with emojis highlighting:
-   - What topics/products they asked about
-   - Any concerns or questions they raised
-   - Preferences they mentioned
-   - Next steps or follow-ups promised
+3. **Key Points** - Create 3-5 bullet points with colorful emojis (🎯, 💡, ⭐, 🔥, 🌟, 💎, 🚀, ✅, 📌, 🎨) highlighting:
+   - What topics/products they asked about 📦 🛍️
+   - Any concerns or questions they raised ❓ 🤔
+   - Preferences they mentioned 💎 ❤️
+   - Next steps or follow-ups promised ✅ 📅
 
-4. **What We're Doing** - Explain what action we're taking based on their call (without using internal jargon). Be customer-friendly.
+4. **What We're Doing** - Explain what action we're taking based on their call (without using internal jargon). Be customer-friendly. Add emojis (⚡, 🚀, 👥, 💪, 🎁, 🌈).
 
-5. **Next Steps for Customer** - Tell them what they can expect from us or what they should do next.
+5. **Next Steps for Customer** - Tell them what they can expect from us or what they should do next. Use emojis (📅, ⏰, 📞, 💌, 🎯).
 
-6. **Closing** - Warm closing with contact information invitation
+6. **Closing** - Warm closing with contact information invitation. Add emojis (💙, 🌟, 👋, 😊, 🙏, ✨).
 
 IMPORTANT REQUIREMENTS:
 - Write TO the customer (use "you", "your call", "we're here to help")
 - NO internal links or platform URLs
 - NO admin/team language
 - Friendly, conversational, customer-service tone
-- Use emojis to make it engaging
+- Use LOTS of emojis throughout (at least 20-30 emojis total to make it engaging and fun!)
 - Be specific about what was discussed
 - Make the customer feel valued and heard
 - Keep it concise but warm
+- Add emojis to EVERY section, bullet point, and sentence where appropriate
 
 FORMAT:
 - Use HTML with inline styles
@@ -280,6 +281,7 @@ FORMAT:
 - Use colors: Blue (#0284c7), Teal (#0891b2) for accents
 - Use <strong> for emphasis
 - Good spacing between sections
+- Add emojis inline with text
 
 Return ONLY the email content HTML (starting with greeting). No outer html/body tags."""
 
@@ -349,56 +351,59 @@ Return ONLY the email content HTML (starting with greeting). No outer html/body 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You for Your Call</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f3f4f6;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);">
     
-    <!-- Email Container -->
-    <table role="presentation" style="width: 100%; border-collapse: collapse; padding: 40px 20px;">
+    <!-- Email Container - Full Width -->
+    <table role="presentation" style="width: 100%; border-collapse: collapse; padding: 30px 20px;">
         <tr>
             <td>
-                <!-- Email Card -->
-                <div style="max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+                <!-- Email Card - Full Width Responsive -->
+                <div style="max-width: 1200px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); border: 1px solid rgba(2, 132, 199, 0.1);">
                     
                     <!-- Header with gradient (customer-friendly) -->
-                    <div style="background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%); padding: 40px 30px; text-align: center;">
-                        <div style="display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 50%; margin-bottom: 15px;">
-                            <svg width="50" height="50" viewBox="0 0 24 24" fill="#ffffff">
-                                <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
+                    <div style="background: linear-gradient(135deg, #0284c7 0%, #0891b2 100%); padding: 60px 40px; text-align: center; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml;utf8,<svg width=\"100\" height=\"100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"30\" fill=\"rgba(255,255,255,0.05)\"/></svg>') repeat; opacity: 0.3;"></div>
+                        <div style="position: relative; z-index: 1;">
+                            <div style="display: inline-block; background: rgba(255, 255, 255, 0.25); padding: 25px; border-radius: 50%; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+                                <svg width="70" height="70" viewBox="0 0 24 24" fill="#ffffff">
+                                    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                            </div>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 38px; font-weight: 700; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                Thank You for Your Call! 📞 ✨
+                            </h1>
+                            <p style="margin: 20px 0 0 0; color: rgba(255, 255, 255, 0.95); font-size: 19px; font-weight: 500;">
+                                🎉 We appreciate you taking the time to speak with us! 💙
+                            </p>
                         </div>
-                        <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 700; letter-spacing: -0.3px;">
-                            Thank You for Your Call! 📞
-                        </h1>
-                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.95); font-size: 15px; font-weight: 500;">
-                            We appreciate you taking the time to speak with us
-                        </p>
                     </div>
                     
                     <!-- Customer-facing content -->
-                    <div style="padding: 40px 35px; color: #1f2937; line-height: 1.7; font-size: 15px;">
+                    <div style="padding: 50px; color: #1f2937; line-height: 1.8; font-size: 16px;">
                         {ai_content}
                     </div>
                     
                     <!-- Contact Section -->
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 25px 35px; border-top: 1px solid #e5e7eb;">
-                        <h3 style="margin: 0 0 12px 0; color: #0c4a6e; font-size: 16px; font-weight: 600;">
-                            📧 Questions or Need Help?
+                    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 35px 50px; border-top: 2px solid #10b981;">
+                        <h3 style="margin: 0 0 15px 0; color: #065f46; font-size: 20px; font-weight: 700;">
+                            💬 Questions or Need Help? 🤔
                         </h3>
-                        <p style="margin: 0; color: #0369a1; font-size: 14px; line-height: 1.6;">
-                            We're here to help! If you have any questions or need further assistance, please don't hesitate to reach out to us. You can reply to this email or contact our support team.
+                        <p style="margin: 0; color: #047857; font-size: 16px; line-height: 1.7;">
+                            🤝 We're here to help! 🌟 If you have any questions or need further assistance, please don't hesitate to reach out to us. You can reply to this email or contact our support team anytime! 📞 💌
                         </p>
                     </div>
                     
                     <!-- Footer -->
-                    <div style="background: #f9fafb; padding: 30px 35px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px; font-weight: 600;">
-                            Call Intelligence Platform
+                    <div style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); padding: 40px 50px; text-align: center; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 18px; font-weight: 700;">
+                            🚀 Call Intelligence Platform 🎯
                         </p>
-                        <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.6;">
-                            Transforming customer conversations into exceptional service
+                        <p style="margin: 0; color: #9ca3af; font-size: 14px; line-height: 1.7;">
+                            ✨ Transforming customer conversations into exceptional service 💼 🌈
                         </p>
-                        <p style="margin: 15px 0 0 0; color: #9ca3af; font-size: 11px;">
-                            This email was sent to you because you recently had a call with us.<br>
-                            © {datetime.now().year} Call Intelligence Platform. All rights reserved.
+                        <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px;">
+                            This email was sent to you because you recently had a call with us. 📧 ☎️<br>
+                            © {datetime.now().year} Call Intelligence Platform. All rights reserved. 🌟 💫
                         </p>
                     </div>
                     

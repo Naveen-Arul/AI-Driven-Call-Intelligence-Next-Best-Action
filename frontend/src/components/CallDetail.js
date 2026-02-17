@@ -83,13 +83,35 @@ function CallDetail() {
     }
 
     setEmailLoading(true);
-    setNotification({ type: 'info', message: '📧 Sending email... Please wait' });
+    
+    // Show detailed step-by-step progress with different colors
+    setNotification({ type: 'processing', message: '🔍 Analyzing call transcript and extracting insights...' });
+    
+    setTimeout(() => {
+      setNotification({ type: 'processing', message: '🧠 LLM is processing call intelligence and sentiment...' });
+    }, 800);
+    
+    setTimeout(() => {
+      setNotification({ type: 'processing', message: '✨ AI is crafting personalized email content...' });
+    }, 1600);
+    
+    setTimeout(() => {
+      setNotification({ type: 'processing', message: '🎨 Designing beautiful HTML email layout...' });
+    }, 2400);
+    
+    setTimeout(() => {
+      setNotification({ type: 'sending', message: '📧 Connecting to email server (TLS port 587)...' });
+    }, 3200);
+    
+    setTimeout(() => {
+      setNotification({ type: 'sending', message: '🚀 Sending email to customer...' });
+    }, 4000);
     
     try {
       await sendEmail(callId, emailRecipient, emailType);
       setNotification({ 
         type: 'success', 
-        message: `✅ Email sent successfully to ${emailRecipient}!` 
+        message: `🎉 Email delivered successfully to ${emailRecipient}! ✅ Customer will receive personalized follow-up.` 
       });
       await loadCallDetails();
     } catch (err) {

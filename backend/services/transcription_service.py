@@ -47,12 +47,26 @@ class TranscriptionService:
         try:
             start_time = time.time()
             
-            logger.info(f"🎙️ Transcribing audio: {audio_path}")
+            # Check if file exists and has content
+            import os
+            if not os.path.exists(audio_path):
+                raise Exception(f"Audio file not found: {audio_path}")
+            
+            file_size = os.path.getsize(audio_path)
+            if file_size < 100:
+                raise Exception(f"Audio file too small ({file_size} bytes) - may be corrupted")
+            
+            logger.info(f"🎙️ Transcribing audio: {audio_path} ({file_size} bytes)")
+            
             # Auto-detect language (no language parameter = auto-detect)
             result = self.model.transcribe(audio_path)
             
             end_time = time.time()
             processing_time = round(end_time - start_time, 2)
+            
+            # Check if transcription was successful
+            if not result.get("text") or not result["text"].strip():
+                raise Exception("No speech detected in audio - silence or noise only")
             
             # Detect language
             detected_language = result.get("language", "en")

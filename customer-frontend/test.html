@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <button type="button" id="testBtn">Click Me</button>
+    <div id="output"></div>
+    
+    <script>
+        console.log('🚀 TEST PAGE LOADED');
+        
+        document.getElementById('testBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('✅ Button clicked - NO REFRESH');
+            document.getElementById('output').textContent = 'Button clicked at ' + new Date().toTimeString();
+        });
+    </script>
+</body>
+</html>

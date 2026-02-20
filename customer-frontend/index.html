@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Assistant - Customer Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">
+                <svg class="brand-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                    <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                </svg>
+                <span>AI Voice Assistant</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="main-content">
+            <!-- Voice Interface Card -->
+            <div class="card voice-card">
+                <!-- Language Detection Display -->
+                <div class="language-section">
+                    <label class="form-label">Detected Language</label>
+                    <div class="detected-language-display" id="detectedLanguage">
+                        <svg class="language-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7 2a1 1 0 011 1v1h3a1 1 0 110 2H9.578a18.87 18.87 0 01-1.724 4.78c.29.354.596.696.914 1.026a1 1 0 11-1.44 1.389c-.188-.196-.373-.396-.554-.6a19.098 19.098 0 01-3.107 3.567 1 1 0 01-1.334-1.49 17.087 17.087 0 003.13-3.733 18.992 18.992 0 01-1.487-2.494 1 1 0 111.79-.89c.234.47.489.928.764 1.372.417-.934.752-1.913.997-2.927H3a1 1 0 110-2h3V3a1 1 0 011-1zm6 6a1 1 0 01.894.553l2.991 5.982a.869.869 0 01.02.037l.99 1.98a1 1 0 11-1.79.895L15.383 16h-4.764l-.724 1.447a1 1 0 11-1.788-.894l.99-1.98.019-.038 2.99-5.982A1 1 0 0113 8zm-1.382 6h2.764L13 11.236 11.618 14z" clip-rule="evenodd"/>
+                        </svg>
+                        <span id="languageText">Will be detected automatically</span>
+                    </div>
+                </div>
+
+                <!-- Status Display -->
+                <div class="status-display" id="statusDisplay">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <div class="status-text" id="statusText">Ready to start</div>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="call-controls">
+                    <button type="button" class="btn btn-primary btn-large" id="startCallBtn">
+                        <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                        </svg>
+                        Start Call
+                    </button>
+
+                    <button type="button" class="btn btn-secondary btn-large hidden" id="micBtn">
+                        <svg class="btn-icon mic-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/>
+                        </svg>
+                        <span id="micBtnText">Press to Speak</span>
+                    </button>
+
+                    <button type="button" class="btn btn-danger btn-large hidden" id="endCallBtn">
+                        <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                        </svg>
+                        End Call
+                    </button>
+                </div>
+
+                <!-- Transcript -->
+                <div class="transcript-section">
+                    <h3 class="section-title">Conversation</h3>
+                    <div class="transcript-container" id="transcriptContainer">
+                        <div class="transcript-empty">
+                            <p>Start a call to begin conversation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="card instructions-card">
+                <h3 class="section-title">How to Use</h3>
+                <ol class="instructions-list">
+                    <li>Click <strong>Start Call</strong> to begin</li>
+                    <li>Click <strong>Press to Speak</strong> to start recording</li>
+                    <li>Speak your message clearly</li>
+                    <li>Click <strong>Stop Recording</strong> when done speaking</li>
+                    <li>Wait for AI to process and respond in your language</li>
+                    <li>Repeat steps 2-5 for multi-turn conversation</li>
+                    <li>Click <strong>End Call</strong> when finished - call will be saved to admin dashboard</li>
+                </ol>
+                <p class="instruction-note">💡 Tip: Click to start, speak clearly, then click to stop</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Element for Playing AI Responses -->
+    <audio id="audioPlayer" style="display: none;"></audio>
+
+    <script src="voice-chat.js"></script>
+</body>
+</html>

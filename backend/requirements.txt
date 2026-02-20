@@ -19,6 +19,10 @@ vaderSentiment==3.3.2
 # LLM Intelligence
 groq==0.13.0
 
+# Voice Bot & Telephony
+twilio==9.0.4
+elevenlabs==0.2.27
+
 # Database & Persistence
 pymongo==4.6.1
 

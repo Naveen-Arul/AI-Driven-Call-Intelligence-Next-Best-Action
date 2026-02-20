@@ -31,6 +31,9 @@ from services.rag_service import RAGService
 from services.email_service import EmailService
 from services.voc_service import VOCService
 
+# Import voice API router
+import voice_api
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -103,6 +106,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include voice API router
+app.include_router(voice_api.router, prefix="/api/voice", tags=["Voice Bot"])
 
 
 # Response Models

@@ -346,16 +346,31 @@ function CallsList() {
                 </tr>
               </thead>
               <tbody>
-                {calls.map((call) => (
+                {calls.map((call) => {
+                  const isUrgent = call.final_decision.urgent_flag || call.final_decision.priority_score >= 80;
+                  return (
                   <tr
                     key={call._id}
-                    style={{cursor: 'pointer'}}
+                    className={isUrgent ? 'urgent-call' : ''}
+                    style={{
+                      cursor: 'pointer',
+                      background: isUrgent ? 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' : 'transparent',
+                      borderLeft: isUrgent ? '4px solid #dc2626' : 'none',
+                      fontWeight: isUrgent ? '600' : 'normal'
+                    }}
                     onClick={() => navigate(`/calls/${call._id}`)}
                   >
                     <td>
-                      <code style={{fontSize: '0.875rem', color: '#3b82f6'}}>
-                        {call._id.substring(0, 8)}...
-                      </code>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                        {isUrgent && (
+                          <svg style={{width: '20px', height: '20px', color: '#dc2626', animation: 'pulse 2s ease-in-out infinite'}} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        <code style={{fontSize: '0.875rem', color: isUrgent ? '#dc2626' : '#3b82f6'}}>
+                          {call._id.substring(0, 8)}...
+                        </code>
+                      </div>
                     </td>
                     <td>{formatDate(call.created_at)}</td>
                     <td>
@@ -404,7 +419,8 @@ function CallsList() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

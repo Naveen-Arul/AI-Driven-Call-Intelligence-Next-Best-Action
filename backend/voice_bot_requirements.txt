@@ -1,0 +1,7 @@
+# Voice Bot Dependencies
+twilio==8.10.0
+deepgram-sdk==3.0.0
+elevenlabs==0.2.27
+python-dotenv==1.0.0
+pyngrok==7.0.0
+requests==2.31.0

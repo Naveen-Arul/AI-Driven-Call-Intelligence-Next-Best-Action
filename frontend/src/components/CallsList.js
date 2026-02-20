@@ -43,12 +43,20 @@ function CallsList() {
         if (statusFilter) filters.status = statusFilter;
         
         const response = await searchCalls(filters);
-        setCalls(response.data.calls);
+        // Sort by created_at descending (newest first)
+        const sortedCalls = response.data.calls.sort((a, b) => 
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+        setCalls(sortedCalls);
       } else {
         // Use regular getCalls API
         const params = statusFilter ? { status: statusFilter } : {};
         const response = await getCalls(params);
-        setCalls(response.data.calls);
+        // Sort by created_at descending (newest first)
+        const sortedCalls = response.data.calls.sort((a, b) => 
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+        setCalls(sortedCalls);
       }
     } catch (err) {
       setError('Failed to load calls. Please ensure the backend is running.');
@@ -82,7 +90,18 @@ function CallsList() {
   }, [loadCalls]);
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+    // Convert to Indian Standard Time (IST)
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
   };
 
   const getPriorityBadge = (score) => {

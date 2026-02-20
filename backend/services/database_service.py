@@ -87,31 +87,37 @@ class DatabaseService:
         final_decision: Dict[str, Any],
         audio_filename: Optional[str] = None,
         audio_data: Optional[bytes] = None,
-        transcription_segments: Optional[List[Dict]] = None
+        transcription_segments: Optional[List[Dict]] = None,
+        language: Optional[str] = None,
+        language_name: Optional[str] = None
     ) -> str:
         """
-        Store complete call processing result.
+        Store complete call processing result with multi-language support.
         
         Args:
-            transcript: Full call transcript
-            nlp_analysis: NLP service output
+            transcript: Call transcript in original language (Tamil, Hindi, Malayalam, English, etc.)
+            nlp_analysis: AI NLP service output (analyzed in original language)
             llm_output: LLM service output
             final_decision: Action engine output
             audio_filename: Original audio filename (optional)
             audio_data: Audio file binary data (optional)
             transcription_segments: Timestamped segments (optional)
+            language: ISO language code (e.g., 'ta', 'en', 'hi', 'ml')
+            language_name: Full language name (e.g., 'Tamil', 'English', 'Hindi', 'Malayalam')
         
         Returns:
             call_id: MongoDB ObjectId as string
         """
         call_document = {
-            "transcript": transcript,
+            "transcript": transcript,  # Original language - no translation needed!
             "nlp_analysis": nlp_analysis,
             "llm_output": llm_output,
             "final_decision": final_decision,
             "audio_filename": audio_filename,
-            "audio_data": audio_data,  # Store audio binary data
+            "audio_data": audio_data,
             "transcription_segments": transcription_segments,
+            "language": language or "en",
+            "language_name": language_name or "English",
             "status": "pending",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
@@ -325,9 +331,12 @@ class DatabaseService:
         try:
             query = {}
             
-            # Text search in transcript
+            # Text search in BOTH original and translated transcripts (multilingual search)
             if search_query:
-                query["$text"] = {"$search": search_query}
+                query["$or"] = [
+                    {"transcript": {"$regex": search_query, "$options": "i"}},  # Original language
+                    {"translated_transcript": {"$regex": search_query, "$options": "i"}}  # English translation
+                ]
             
             # Sentiment filter
             if sentiment:
@@ -386,3 +395,40 @@ class DatabaseService:
         except Exception as e:
             print(f"Error retrieving audio data: {e}")
             return None
+    
+    def get_language_statistics(self) -> List[Dict[str, Any]]:
+        """
+        Get statistics on detected languages across all calls.
+        
+        Returns:
+            List of language stats: [{"language": "Tamil", "language_code": "ta", "count": 50}, ...]
+        """
+        try:
+            pipeline = [
+                {
+                    "$group": {
+                        "_id": {
+                            "language": "$language",
+                            "language_name": "$language_name"
+                        },
+                        "count": {"$sum": 1}
+                    }
+                },
+                {
+                    "$sort": {"count": -1}
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "language_code": "$_id.language",
+                        "language_name": "$_id.language_name",
+                        "count": 1
+                    }
+                }
+            ]
+            
+            result = list(self.calls_collection.aggregate(pipeline))
+            return result
+        except Exception as e:
+            print(f"Error getting language statistics: {e}")
+            return []

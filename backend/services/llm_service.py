@@ -37,15 +37,19 @@ class LLMService:
         self, 
         transcript: str, 
         nlp_analysis: Dict,
-        company_context: Optional[str] = None
+        company_context: Optional[str] = None,
+        language: str = "en",
+        language_name: str = "English"
     ) -> Dict:
         """
-        Generate structured intelligence from transcript and NLP analysis.
+        Generate structured intelligence from transcript in ANY language.
         
         Args:
-            transcript: Full call transcript text
+            transcript: Full call transcript text (in original language - Tamil, Hindi, etc.)
             nlp_analysis: Dictionary containing sentiment, keywords, entities, and intent
             company_context: Optional company policy context from RAG service
+            language: ISO language code (ta, hi, ml, en, etc.)
+            language_name: Full language name (Tamil, Hindi, Malayalam, English, etc.)
             
         Returns:
             {
@@ -65,8 +69,11 @@ class LLMService:
         keywords = nlp_analysis.get("keywords", {})
         entities = nlp_analysis.get("entities", [])
         
-        # Build structured prompt
-        prompt = self._build_prompt(transcript, sentiment, intent, keywords, entities, company_context)
+        # Build structured multilingual prompt
+        prompt = self._build_multilingual_prompt(
+            transcript, sentiment, intent, keywords, entities, 
+            company_context, language, language_name
+        )
         
         try:
             logger.info(f"Generating intelligence for intent: {intent}")
@@ -134,25 +141,29 @@ class LLMService:
                 "details": str(e)
             }
     
-    def _build_prompt(
+    def _build_multilingual_prompt(
         self,
         transcript: str,
         sentiment: Dict,
         intent: str,
         keywords: Dict,
         entities: list,
-        company_context: Optional[str] = None
+        company_context: Optional[str] = None,
+        language: str = "en",
+        language_name: str = "English"
     ) -> str:
         """
-        Build structured prompt for LLM.
+        Build structured prompt for LLM with multilingual support.
         
         Args:
-            transcript: Full transcript
+            transcript: Full transcript in original language
             sentiment: Sentiment analysis results
             intent: Detected intent
             keywords: Detected keywords by category
             entities: Extracted entities
             company_context: Optional company policy context
+            language: ISO language code
+            language_name: Full language name
             
         Returns:
             Formatted prompt string
@@ -160,58 +171,124 @@ class LLMService:
         
         sentiment_label = sentiment.get("sentiment_label", "neutral")
         sentiment_score = sentiment.get("compound", 0.0)
+        sentiment_explanation = sentiment.get("explanation", "")
         
         # Add company context section if available
         context_section = ""
         if company_context:
             context_section = f"\n\n{company_context}\n"
         
-        prompt = f"""Analyze this sales/support call and return structured intelligence.
+        prompt = f"""Analyze this business call transcript and provide structured intelligence.
+
+**IMPORTANT:** This transcript is in {language_name}. Understand the conversation in its original language.
 {context_section}
-**CALL TRANSCRIPT:**
+**CALL TRANSCRIPT ({language_name.upper()}):**
 {transcript}
 
-**DETERMINISTIC NLP SIGNALS:**
-- Sentiment: {sentiment_label} (score: {sentiment_score})
+**AI NLP ANALYSIS:**
+- Language: {language_name} ({language})
+- Sentiment: {sentiment_label} (score: {sentiment_score:.2f})
+- Sentiment Explanation: {sentiment_explanation}
 - Detected Intent: {intent}
-- Keywords Found: {json.dumps(keywords, indent=2)}
-- Entities Extracted: {json.dumps(entities, indent=2)}
+- Keywords: {json.dumps(keywords, indent=2, ensure_ascii=False) if keywords else "None detected"}
+- Entities: {json.dumps(entities, indent=2, ensure_ascii=False) if entities else "None detected"}
 
-**TASK:**
-Return STRICT JSON with the following structure:
+**MULTILINGUAL FEW-SHOT EXAMPLES:**
 
+Example 1 - English Product Inquiry (Positive):
+Transcript: "I want to know about the product features and pricing"
+Intelligence:
 {{
-  "call_summary_short": "One-sentence summary of the call",
-  "call_summary_detailed": "Detailed paragraph summary with key points",
-  "risk_level": "low | medium | high",
-  "opportunity_level": "low | medium | high",
-  "recommended_action": "Specific next action to take",
-  "priority_score": <integer 0-100>,
-  "reasoning": "Brief explanation of priority and recommendation"
+  "call_summary_short": "Customer inquired about product features and pricing",
+  "call_summary_detailed": "The customer called to understand the product's features and pricing structure. They showed clear interest in learning more about the offering.",
+  "risk_level": "low",
+  "opportunity_level": "medium",
+  "recommended_action": "Send detailed product brochure with pricing tiers and schedule a demo call",
+  "priority_score": 60,
+  "reasoning": "Customer shows active interest in product features and pricing, indicating sales readiness. Medium opportunity with low risk."
 }}
 
-**RULES:**
-- risk_level: Assess churn risk, complaint severity, or dissatisfaction
-- opportunity_level: Assess sales potential, upsell chance, or qualified lead quality
-- recommended_action: Be specific and actionable (e.g., "Schedule demo for next Tuesday", "Escalate to retention manager immediately")
-- priority_score: 0=lowest, 100=highest urgency
-- Consider: sentiment + intent + keywords when determining priority
-- Churn risk = high priority
-- Demo requests with positive sentiment = high opportunity
-- Complaints = high risk + medium-high priority
+Example 2 - Tamil Complaint (Negative):
+Transcript: "உங்கள் சேவை சரியாக வேலை செய்யவில்லை. மிகவும் வருத்தமாக இருக்கிறது."
+Meaning: "Your service is not working properly. Very frustrated."
+Intelligence:
+{{
+  "call_summary_short": "Customer reported service malfunction with high frustration",
+  "call_summary_detailed": "The customer contacted support in Tamil regarding service issues. They expressed significant frustration about functionality problems impacting their experience.",
+  "risk_level": "high",
+  "opportunity_level": "low",
+  "recommended_action": "Escalate to Tamil-speaking technical support immediately and provide status updates within 2 hours",
+  "priority_score": 85,
+  "reasoning": "Active customer complaint in regional language with high dissatisfaction poses churn risk. Requires urgent attention with language-appropriate support."
+}}
 
-Return ONLY valid JSON. No markdown, no explanation, just JSON.
-"""
-        
+Example 3 - Hindi Demo Request (Very Positive):
+Transcript: "मैं बहुत रुचि रखता हूं। क्या आप अगले सप्ताह डेमो शेड्यूल कर सकते हैं?"
+Meaning: "I'm very interested. Can you schedule a demo next week?"
+Intelligence:
+{{
+  "call_summary_short": "Customer requested product demonstration in Hindi for next week",
+  "call_summary_detailed": "The customer expressed strong interest in Hindi and proactively requested a demonstration scheduled for next week. Shows high engagement and buying intent.",
+  "risk_level": "low",
+  "opportunity_level": "high",
+  "recommended_action": "Schedule Hindi-language demo for next week and send calendar invite with preparation materials",
+  "priority_score": 90,
+  "reasoning": "Customer shows high buying intent with specific demo request in regional language. High opportunity with clear next step. Urgent priority to maintain momentum with language-appropriate sales support."
+}}
+
+Example 4 - Malayalam Information Request (Neutral):
+Transcript: "ഞാൻ ഉത്പന്നത്തെക്കുറിച്ച് കൂടുതൽ അറിയാൻ ആഗ്രഹിക്കുന്നു"
+Meaning: "I want to know more about the product"
+Intelligence:
+{{
+  "call_summary_short": "Customer sought product information in Malayalam",
+  "call_summary_detailed": "The customer called in Malayalam to request more information about the product. They showed interest in understanding the offering better.",
+  "risk_level": "low",
+  "opportunity_level": "medium",
+  "recommended_action": "Provide Malayalam product documentation and follow up with phone call in 2-3 days",
+  "priority_score": 55,
+  "reasoning": "Customer expressing interest in regional language indicates engagement. Provide language-appropriate materials to nurture the opportunity."
+}}
+
+**YOUR TASK:**
+Analyze the {language_name} transcript above (understanding its original meaning) and return STRICT JSON:
+
+{{
+  "call_summary_short": "<one clear sentence in English>",
+  "call_summary_detailed": "<2-3 sentence detailed summary in English>",
+  "risk_level": "low" | "medium" | "high",
+  "opportunity_level": "low" | "medium" | "high",
+  "recommended_action": "<specific, actionable next step in English>",
+  "priority_score": <integer 0-100>,
+  "reasoning": "<brief explanation in English>"
+}}
+
+**SCORING GUIDELINES:**
+- risk_level: high = complaint/cancellation/dissatisfaction, medium = objection/concern, low = satisfied/neutral
+- opportunity_level: high = demo request/buying intent, medium = interest/inquiry, low = complaint/general
+- priority_score: 90-100 = urgent (demo requests, complaints), 60-89 = important (inquiries, interest), 0-59 = routine
+- recommended_action: Be SPECIFIC - include timelines, actions, language support needs if applicable
+- Consider CULTURAL CONTEXT - {language_name} speakers may have specific service expectations
+- If not English, mention language support in recommendations when appropriate
+
+Return ONLY valid JSON. Summaries and reasoning in English, but understand the original {language_name} meaning."""
+
         return prompt
     
     def generate_action_email(
         self,
-        call_data: Dict
+        call_data: Dict,
+        language: str = "en",
+        language_name: str = "English"
     ) -> str:
         """
         Generate a customer-facing email thanking them for their call and summarizing the conversation.
-        This email is sent TO THE CUSTOMER, not internal team.
+        This email is sent TO THE CUSTOMER in their detected language.
+        
+        Args:
+            call_data: Call data with transcript, NLP analysis, and LLM output
+            language: Language code (e.g., 'ta', 'ml', 'hi', 'en')
+            language_name: Human-readable language name (e.g., 'Tamil', 'Malayalam')
         """
         
         # Extract key information
@@ -235,8 +312,15 @@ Return ONLY valid JSON. No markdown, no explanation, just JSON.
         keywords = nlp_analysis.get("keywords", {})
         intent = nlp_analysis.get("intent", "general_inquiry")
         
-        # Build AI prompt for customer-facing email
+        # Build AI prompt for customer-facing email in detected language
+        language_instruction = f"""CRITICAL: Write the ENTIRE email in {language_name} language.
+The customer spoke in {language_name}, so they expect a reply in {language_name}.
+Do NOT write in English unless the detected language is English.
+""" if language != "en" else "Write the email in English."
+
         prompt = f"""You are writing a professional customer-facing email to someone who just had a call with our company.
+
+{language_instruction}
 
 CALL DETAILS:
 - What the customer said: "{transcript_text[:600]}"
@@ -244,8 +328,9 @@ CALL DETAILS:
 - Customer's Intent: {intent}
 - Topics Discussed: {', '.join([k for cat in keywords.values() for k in cat][:5]) if keywords else 'General conversation'}
 - Customer Sentiment: {sentiment.get('sentiment_label', 'neutral')}
+- Customer Language: {language_name}
 
-TASK: Write a warm, professional email TO THE CUSTOMER with these sections:
+TASK: Write a warm, professional email TO THE CUSTOMER in {language_name} with these sections:
 
 1. **Greeting** - Warm greeting thanking them for their call. Use emojis like 👋, 😊, 💙
 
@@ -264,15 +349,17 @@ TASK: Write a warm, professional email TO THE CUSTOMER with these sections:
 6. **Closing** - Warm closing with contact information invitation. Add emojis (💙, 🌟, 👋, 😊, 🙏, ✨).
 
 IMPORTANT REQUIREMENTS:
-- Write TO the customer (use "you", "your call", "we're here to help")
+- Write ENTIRE email in {language_name} language (NOT English unless language is English)
+- Write TO the customer (use "you", "your call", "we're here to help" in {language_name})
 - NO internal links or platform URLs
 - NO admin/team language
-- Friendly, conversational, customer-service tone
+- Friendly, conversational, customer-service tone matching {language_name} cultural context
 - Use LOTS of emojis throughout (at least 20-30 emojis total to make it engaging and fun!)
 - Be specific about what was discussed
 - Make the customer feel valued and heard
 - Keep it concise but warm
 - Add emojis to EVERY section, bullet point, and sentence where appropriate
+- If writing in Tamil/Malayalam/Hindi/Telugu, use proper script and natural phrasing
 
 FORMAT:
 - Use HTML with inline styles

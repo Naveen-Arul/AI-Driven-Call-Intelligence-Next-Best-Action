@@ -12,18 +12,26 @@ function ProcessCall() {
   const [batchResult, setBatchResult] = useState(null);
   const [error, setError] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [stepTimings, setStepTimings] = useState({});
+  const [processingStartTime, setProcessingStartTime] = useState(null);
   const navigate = useNavigate();
 
   const processingSteps = [
-    { id: 1, name: 'Uploading Audio', icon: '📤', description: 'Sending audio file to server', duration: 1000 },
-    { id: 2, name: 'Speech-to-Text', icon: '🎙️', description: 'Converting speech using OpenAI Whisper', duration: 3000 },
-    { id: 3, name: 'NLP Analysis', icon: '🧠', description: 'Analyzing sentiment, keywords, entities', duration: 2000 },
-    { id: 4, name: 'RAG Context', icon: '📚', description: 'Retrieving company policies', duration: 1500 },
-    { id: 5, name: 'LLM Intelligence', icon: '🤖', description: 'Generating AI recommendations with Groq', duration: 2500 },
-    { id: 6, name: 'Business Rules', icon: '⚖️', description: 'Applying validation rules', duration: 1000 },
-    { id: 7, name: 'Database Storage', icon: '💾', description: 'Saving to MongoDB', duration: 1000 },
-    { id: 8, name: 'Complete', icon: '✅', description: 'Analysis ready!', duration: 500 }
+    { id: 1, name: 'Uploading Audio', icon: '📤', description: 'Sending audio file to server' },
+    { id: 2, name: 'Speech-to-Text', icon: '🎙️', description: 'Converting speech using OpenAI Whisper' },
+    { id: 3, name: 'NLP Analysis', icon: '🧠', description: 'Analyzing sentiment, keywords, entities' },
+    { id: 4, name: 'RAG Context', icon: '📚', description: 'Retrieving company policies' },
+    { id: 5, name: 'LLM Intelligence', icon: '🤖', description: 'Generating AI recommendations with Groq' },
+    { id: 6, name: 'Business Rules', icon: '⚖️', description: 'Applying validation rules' },
+    { id: 7, name: 'Database Storage', icon: '💾', description: 'Saving to MongoDB' },
+    { id: 8, name: 'Complete', icon: '✅', description: 'Analysis ready!' }
   ];
+
+  // Helper function to format elapsed time
+  const formatElapsedTime = (ms) => {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(2)}s`;
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -96,21 +104,43 @@ function ProcessCall() {
       setError(null);
       setResult(null);
       setCurrentStep(0);
+      setStepTimings({});
+      
+      const startTime = Date.now();
+      setProcessingStartTime(startTime);
 
-      // Animate through processing steps
-      const animateSteps = async () => {
-        for (let i = 0; i < processingSteps.length - 1; i++) {
+      // Simulate step progression based on estimated backend timing
+      const simulateSteps = async () => {
+        const stepDurations = [300, 2500, 1800, 400, 2200, 600, 500]; // Estimated durations per step
+        let elapsedTime = 0;
+        
+        for (let i = 0; i < stepDurations.length; i++) {
           setCurrentStep(i);
-          await new Promise(resolve => setTimeout(resolve, processingSteps[i].duration));
+          await new Promise(resolve => setTimeout(resolve, stepDurations[i]));
+          elapsedTime += stepDurations[i];
+          
+          // Record completion time for this step
+          setStepTimings(prev => ({
+            ...prev,
+            [i]: elapsedTime
+          }));
         }
       };
 
-      // Start animation
-      animateSteps();
+      // Start step simulation
+      simulateSteps();
 
       try {
         const response = await processCall(selectedFile);
-        setCurrentStep(processingSteps.length - 1); // Set to complete step
+        const totalTime = Date.now() - startTime;
+        
+        // Mark all steps as complete with actual time
+        setCurrentStep(processingSteps.length - 1);
+        setStepTimings(prev => ({
+          ...prev,
+          [processingSteps.length - 1]: totalTime
+        }));
+        
         await new Promise(resolve => setTimeout(resolve, 500)); // Show complete for a moment
         setResult(response.data);
       } catch (err) {
@@ -129,6 +159,8 @@ function ProcessCall() {
     setResult(null);
     setBatchResult(null);
     setError(null);
+    setStepTimings({});
+    setProcessingStartTime(null);
   };
 
   const toggleBatchMode = () => {
@@ -212,9 +244,17 @@ function ProcessCall() {
           </div>
         )}
 
-        {/* Single Call Result - Final Decision */}
+        {/* Single Call Result - Show Complete Analysis */}
         {result && (
           <>
+            {/* Language Detection */}
+            {result.language_name && result.language_name !== 'English' && (
+              <div className="alert alert-info" style={{ background: '#fef3c7', borderColor: '#fbbf24', color: '#92400e' }}>
+                <strong>🌐 Language Detected:</strong> {result.language_name} - Analysis performed directly in original language using AI!
+              </div>
+            )}
+
+            {/* Final Decision */}
             <div className="card">
               <h2 className="card-header">
                 <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -277,7 +317,108 @@ function ProcessCall() {
                   <div className="detail-value">{result.final_decision.confidence_score}%</div>
                 </div>
               </div>
+
+              {/* Reasoning */}
+              {result.final_decision.reasoning && (
+                <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>REASONING</div>
+                  <div>{result.final_decision.reasoning}</div>
+                </div>
+              )}
             </div>
+
+            {/* LLM Intelligence */}
+            {result.llm_output && (
+              <div className="card mt-3">
+                <h2 className="card-header">
+                  <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13 7H7v6h6V7z" />
+                    <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
+                  </svg>
+                  🤖 LLM Intelligence (AI Analysis)
+                </h2>
+
+                {/* Summary Cards */}
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 45%', minWidth: '250px' }}>
+                    <div style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                      <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#0369a1', marginBottom: '0.5rem' }}>
+                        CALL SUMMARY (SHORT)
+                      </div>
+                      <div style={{ color: '#0c4a6e' }}>{result.llm_output.call_summary_short}</div>
+                    </div>
+                  </div>
+                  <div style={{ flex: '1 1 45%', minWidth: '250px' }}>
+                    <div style={{ background: '#fefce8', padding: '1rem', borderRadius: '8px', border: '1px solid #fef08a' }}>
+                      <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#854d0e', marginBottom: '0.5rem' }}>
+                        CALL SUMMARY (DETAILED)
+                      </div>
+                      <div style={{ color: '#713f12', fontSize: '0.9rem' }}>{result.llm_output.call_summary_detailed}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assessment Grid */}
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <div className="detail-label">Risk Assessment</div>
+                    <div className="detail-value">
+                      <span className={`badge ${
+                        result.llm_output.risk_level === 'high' ? 'badge-danger' :
+                        result.llm_output.risk_level === 'medium' ? 'badge-warning' :
+                        'badge-success'
+                      }`}>
+                        {result.llm_output.risk_level}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">Opportunity Assessment</div>
+                    <div className="detail-value">
+                      <span className={`badge ${
+                        result.llm_output.opportunity_level === 'high' ? 'badge-success' :
+                        result.llm_output.opportunity_level === 'medium' ? 'badge-info' :
+                        'badge-secondary'
+                      }`}>
+                        {result.llm_output.opportunity_level}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">LLM Priority Score</div>
+                    <div className="detail-value">
+                      <span className={`badge ${
+                        result.llm_output.priority_score >= 80 ? 'badge-danger' :
+                        result.llm_output.priority_score >= 60 ? 'badge-warning' :
+                        'badge-info'
+                      }`}>
+                        {result.llm_output.priority_score}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommended Action */}
+                {result.llm_output.recommended_action && (
+                  <div style={{ marginTop: '1rem', padding: '1rem', background: '#dcfce7', borderRadius: '8px', borderLeft: '4px solid #22c55e' }}>
+                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#15803d', marginBottom: '0.5rem' }}>
+                      💡 RECOMMENDED ACTION
+                    </div>
+                    <div style={{ color: '#14532d' }}>{result.llm_output.recommended_action}</div>
+                  </div>
+                )}
+
+                {/* Reasoning */}
+                {result.llm_output.reasoning && (
+                  <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', borderLeft: '4px solid #8b5cf6' }}>
+                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#7c3aed', marginBottom: '0.5rem' }}>
+                      🧠 AI REASONING
+                    </div>
+                    <div style={{ color: '#5b21b6' }}>{result.llm_output.reasoning}</div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Transcript */}
             <div className="card mt-3">
@@ -286,23 +427,40 @@ function ProcessCall() {
                   <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                 </svg>
                 Transcript
+                {result.language_name && (
+                  <span className="language-badge" style={{
+                    marginLeft: '12px',
+                    fontSize: '0.85rem',
+                    fontWeight: 'normal',
+                    padding: '4px 12px',
+                    background: result.language_name === 'Tamil' ? '#fef3c7' : result.language_name === 'English' ? '#e0f2fe' : '#fef3c7',
+                    color: result.language_name === 'Tamil' ? '#92400e' : result.language_name === 'English' ? '#0369a1' : '#92400e',
+                    borderRadius: '12px'
+                  }}>
+                    {result.language_name === 'Tamil' ? '🟠' : result.language_name === 'English' ? '🇺🇸' : '🌐'} {result.language_name}
+                  </span>
+                )}
               </h2>
-              <div style={{padding: '1rem', background: '#f8fafc', borderRadius: '8px', whiteSpace: 'pre-wrap'}}>
+              <div 
+                className={result.language_name === 'Tamil' ? 'transcript-tamil' : result.language_name && result.language_name !== 'English' ? 'multilingual-text' : ''}
+                style={{padding: '1rem', background: '#f8fafc', borderRadius: '8px', whiteSpace: 'pre-wrap'}}
+                lang={result.language || 'en'}
+              >
                 {result.transcript}
               </div>
             </div>
 
-            {/* Sentiment */}
+            {/* NLP Sentiment & Analysis */}
             <div className="card mt-3">
               <h2 className="card-header">
                 <svg className="card-icon" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
                 </svg>
-                Sentiment Analysis
+                NLP Analysis (AI-Powered)
               </h2>
               <div className="detail-grid">
                 <div className="detail-item">
-                  <div className="detail-label">Overall Sentiment</div>
+                  <div className="detail-label">Sentiment</div>
                   <div className="detail-value">
                     <span className={`badge ${
                       result.nlp_analysis.sentiment.sentiment_label === 'positive' ? 'badge-success' :
@@ -324,6 +482,59 @@ function ProcessCall() {
                   </div>
                 </div>
               </div>
+
+              {/* Sentiment Explanation */}
+              {result.nlp_analysis.sentiment.explanation && (
+                <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#0369a1', marginBottom: '0.5rem' }}>
+                    💭 SENTIMENT EXPLANATION
+                  </div>
+                  <div style={{ color: '#0c4a6e' }}>{result.nlp_analysis.sentiment.explanation}</div>
+                </div>
+              )}
+
+              {/* Keywords */}
+              {result.nlp_analysis.keywords && Object.keys(result.nlp_analysis.keywords).length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#64748b', marginBottom: '0.75rem' }}>
+                    DETECTED KEYWORDS
+                  </div>
+                  {Object.entries(result.nlp_analysis.keywords).map(([category, words]) => (
+                    <div key={category} style={{ marginBottom: '0.75rem' }}>
+                      <span style={{ fontWeight: '600', fontSize: '0.875rem', color: '#475569', marginRight: '0.5rem' }}>
+                        {category}:
+                      </span>
+                      {words.map((word, index) => (
+                        <span key={index} className="badge badge-secondary" style={{ marginRight: '0.5rem' }}>
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Entities */}
+              {result.nlp_analysis.entities && result.nlp_analysis.entities.length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#64748b', marginBottom: '0.75rem' }}>
+                    DETECTED ENTITIES
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {result.nlp_analysis.entities.map((entity, index) => (
+                      <div key={index} style={{ 
+                        background: '#fef3c7', 
+                        borderRadius: '8px', 
+                        padding: '0.5rem',
+                        border: '1px solid #fbbf24'
+                      }}>
+                        <span style={{ fontWeight: '600', color: '#92400e' }}>{entity.text}</span>
+                        <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#78350f' }}>({entity.label})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -569,6 +780,7 @@ function ProcessCall() {
                 const isComplete = index < currentStep;
                 const isCurrent = index === currentStep;
                 const isPending = index > currentStep;
+                const stepTime = stepTimings[index];
 
                 return (
                   <div
@@ -599,11 +811,29 @@ function ProcessCall() {
                         fontWeight: '600',
                         color: isCurrent ? '#0284c7' : isComplete ? '#059669' : '#64748b',
                         fontSize: '1rem',
-                        marginBottom: '0.25rem'
+                        marginBottom: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
                       }}>
-                        {step.name}
-                        {isComplete && ' ✓'}
-                        {isCurrent && ' ⚡'}
+                        <span>
+                          {step.name}
+                          {isComplete && ' ✓'}
+                          {isCurrent && ' ⚡'}
+                        </span>
+                        {stepTime !== undefined && (
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            color: '#0891b2',
+                            background: '#ecfeff',
+                            padding: '0.125rem 0.5rem',
+                            borderRadius: '12px',
+                            border: '1px solid #a5f3fc'
+                          }}>
+                            {formatElapsedTime(stepTime)}
+                          </span>
+                        )}
                       </div>
                       <div style={{
                         fontSize: '0.875rem',
@@ -643,7 +873,7 @@ function ProcessCall() {
                 margin: 0,
                 fontWeight: '500'
               }}>
-                💡 <strong>Tip:</strong> Our AI is analyzing your call through multiple layers - this typically takes 8-12 seconds for a complete analysis.
+                💡 <strong>Tip:</strong> Our AI is analyzing your call through multiple layers - watch the real-time progress with elapsed time for each step!
               </p>
             </div>
           </div>

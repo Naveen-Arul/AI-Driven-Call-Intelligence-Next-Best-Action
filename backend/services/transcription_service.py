@@ -31,26 +31,52 @@ class TranscriptionService:
     
     def transcribe(self, audio_path: str) -> Dict:
         """
-        Transcribes an audio file and returns structured data.
+        Transcribes an audio file with automatic language detection.
         
         Args:
             audio_path: Path to the audio file
             
         Returns:
             Dictionary containing:
-                - transcript: Full text transcription
+                - transcript: Full text transcription (original language)
                 - segments: List of timestamped segments
                 - processing_time: Time taken to process (seconds)
-                - language: Detected language
+                - language: Detected language code (e.g., 'en', 'ta', 'hi')
+                - language_name: Full language name (e.g., 'English', 'Tamil')
         """
         try:
             start_time = time.time()
             
-            logger.info(f"Transcribing audio: {audio_path}")
+            logger.info(f"🎙️ Transcribing audio: {audio_path}")
+            # Auto-detect language (no language parameter = auto-detect)
             result = self.model.transcribe(audio_path)
             
             end_time = time.time()
             processing_time = round(end_time - start_time, 2)
+            
+            # Detect language
+            detected_language = result.get("language", "en")
+            
+            # Map language codes to full names
+            language_names = {
+                "en": "English",
+                "ta": "Tamil",
+                "hi": "Hindi",
+                "te": "Telugu",
+                "ml": "Malayalam",
+                "kn": "Kannada",
+                "es": "Spanish",
+                "fr": "French",
+                "de": "German",
+                "zh": "Chinese",
+                "ja": "Japanese",
+                "ar": "Arabic",
+                "ru": "Russian",
+                "pt": "Portuguese",
+                "it": "Italian"
+            }
+            
+            language_name = language_names.get(detected_language, detected_language.upper())
             
             # Structure segments with timestamps
             segments = [
@@ -62,12 +88,13 @@ class TranscriptionService:
                 for segment in result.get("segments", [])
             ]
             
-            logger.info(f"Transcription completed in {processing_time}s")
+            logger.info(f"✅ Transcription completed in {processing_time}s - Language: {language_name} ({detected_language})")
             
             return {
                 "transcript": result["text"].strip(),
                 "segments": segments,
-                "language": result.get("language", "unknown"),
+                "language": detected_language,
+                "language_name": language_name,
                 "processing_time": processing_time
             }
             

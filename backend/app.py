@@ -22,7 +22,8 @@ import asyncio
 load_dotenv()
 
 from services.transcription_service import TranscriptionService
-from services.nlp_service import NLPService
+from services.translation_service import TranslationService
+from services.ai_nlp_service import AINLPService
 from services.llm_service import LLMService
 from services.action_engine import ActionEngine
 from services.database_service import DatabaseService
@@ -40,6 +41,7 @@ UPLOAD_FOLDER.mkdir(exist_ok=True)
 
 # Initialize services (loaded once at startup)
 transcription_service = None
+translation_service = None
 nlp_service = None
 llm_service = None
 action_engine = None
@@ -52,13 +54,14 @@ voc_service = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
-    global transcription_service, nlp_service, llm_service, action_engine, db_service, rag_service, email_service, voc_service
+    global transcription_service, translation_service, nlp_service, llm_service, action_engine, db_service, rag_service, email_service, voc_service
     
     logger.info("Starting Call Intelligence API v5.0...")
     
     # Initialize all services
-    transcription_service = TranscriptionService(model_size="base")
-    nlp_service = NLPService()
+    transcription_service = TranscriptionService(model_size="medium")  # Medium model for better Tamil/Malayalam accuracy
+    translation_service = TranslationService()
+    nlp_service = AINLPService()  # AI-powered NLP with Groq LLM
     llm_service = LLMService()
     action_engine = ActionEngine()
     
@@ -504,29 +507,44 @@ async def process_call(file: UploadFile = File(...)):
         with temp_path.open("wb") as f:
             f.write(audio_bytes)
         
-        # Step 1: Transcribe
-        logger.info("Step 1/5: Transcribing audio...")
+        # ====================================================================
+        # AI-POWERED MULTILINGUAL PIPELINE (No Translation Needed!)
+        # ====================================================================
+        
+        # Step 1: Transcribe with auto language detection
+        logger.info("Step 1/4: Transcribing audio (auto-detect language)...")
         transcription_result = transcription_service.transcribe(str(temp_path))
         transcript = transcription_result["transcript"]
         segments = transcription_result.get("segments", [])
+        detected_language = transcription_result.get("language", "en")
+        language_name = transcription_result.get("language_name", "English")
+        
+        logger.info(f"🌐 Detected language: {language_name} ({detected_language})")
         
         # Clean up temp file immediately
         temp_path.unlink()
         
-        # Step 2: NLP Analysis with segment-level sentiment
-        logger.info("Step 2/5: Analyzing transcript (NLP)...")
-        nlp_analysis = nlp_service.analyze(transcript, segments=segments)
+        # Step 2: AI-Powered NLP Analysis (directly on original language!)
+        logger.info(f"Step 2/4: AI analyzing transcript in {language_name}...")
+        nlp_analysis = nlp_service.analyze(
+            transcript, 
+            segments=segments,
+            language=detected_language,
+            language_name=language_name
+        )
         
         # Step 3: Get company context from RAG
-        logger.info("Step 3/5: Retrieving company context (RAG)...")
+        logger.info("Step 3/4: Retrieving company context (RAG)...")
         company_context = rag_service.get_context_for_llm(transcript, nlp_analysis)
         
-        # Step 4: LLM Intelligence (with RAG context)
-        logger.info("Step 4/5: Generating intelligence (LLM + RAG)...")
+        # Step 4: LLM Intelligence (directly on original language with multilingual understanding)
+        logger.info(f"Step 4/4: Generating intelligence from {language_name} conversation...")
         llm_output = llm_service.generate_intelligence(
             transcript,
             nlp_analysis,
-            company_context=company_context
+            company_context=company_context,
+            language=detected_language,
+            language_name=language_name
         )
         
         if "error" in llm_output:
@@ -542,7 +560,7 @@ async def process_call(file: UploadFile = File(...)):
             llm_output=llm_output
         )
         
-        # Step 6: Store in MongoDB with audio data
+        # Step 6: Store in MongoDB
         logger.info("💾 Storing in MongoDB...")
         call_id = db_service.store_call(
             transcript=transcript,
@@ -550,20 +568,25 @@ async def process_call(file: UploadFile = File(...)):
             llm_output=llm_output,
             final_decision=final_decision,
             audio_filename=file.filename,
-            audio_data=audio_bytes,  # Store audio binary data
-            transcription_segments=segments
+            audio_data=audio_bytes,
+            transcription_segments=segments,
+            language=detected_language,
+            language_name=language_name
         )
         
-        logger.info(f"✅ Call processed successfully - ID: {call_id}")
+        logger.info(f"✅ Call processed successfully - ID: {call_id}, Language: {language_name}")
         
         return JSONResponse(content={
             "call_id": call_id,
             "transcript": transcript,
+            "language": detected_language,
+            "language_name": language_name,
             "nlp_analysis": nlp_analysis,
             "llm_output": llm_output,
             "final_decision": final_decision,
             "status": "pending",
-            "message": "Call processed and stored successfully"
+            "message": f"Call processed successfully in {language_name}",
+            "audio_filename": file.filename
         })
         
     except HTTPException:
@@ -648,13 +671,50 @@ async def get_dashboard_metrics():
         - Average priority score
         - Sentiment distribution
         - Status distribution
+        - Language statistics
     """
     try:
         metrics = db_service.get_dashboard_metrics()
+        
+        # Add language statistics
+        language_stats = db_service.get_language_statistics()
+        metrics["language_statistics"] = language_stats
+        
         return JSONResponse(content=metrics)
         
     except Exception as e:
         logger.error(f"Failed to calculate metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/dashboard/languages")
+async def get_language_statistics():
+    """
+    🌐 Get language distribution statistics.
+    
+    Returns:
+        List of languages with call counts:
+        [
+            {"language_name": "English", "language_code": "en", "count": 120},
+            {"language_name": "Tamil", "language_code": "ta", "count": 45},
+            ...
+        ]
+    """
+    try:
+        language_stats = db_service.get_language_statistics()
+        total_calls = sum(stat["count"] for stat in language_stats)
+        
+        # Add percentage
+        for stat in language_stats:
+            stat["percentage"] = round((stat["count"] / total_calls * 100), 1) if total_calls > 0 else 0
+        
+        return JSONResponse(content={
+            "language_statistics": language_stats,
+            "total_calls": total_calls
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to get language statistics: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
